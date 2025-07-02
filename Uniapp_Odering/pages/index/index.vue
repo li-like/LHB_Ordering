@@ -409,21 +409,29 @@ export default {
 	},
 	
 	onLoad() {
-		this.checkLogin();
-		this.loadUserData();
+		// 获取用户信息
+		this.userInfo = userManager.getUserInfo();
+		
+		// 获取家庭信息
+		this.familyData = this.userInfo.family || {};
+		
+		// 设置问候语
 		this.setGreeting();
-		// 注册用户信息更新监听
-		this.userInfoUpdateHandler = (updatedUserInfo) => {
-			console.log('index页面收到用户信息更新通知:', updatedUserInfo);
-			this.userInfo = updatedUserInfo;
-		};
-		userManager.onUserInfoUpdated(this.userInfoUpdateHandler);
+		
+		// 从本地存储加载分类和菜品数据
+		this.loadFoodCategories();
+		
+		// 设置默认激活分类
+		this.selectFoodCategory(this.activeCategory);
 	},
 	
 	onShow() {
 		this.checkLogin(); // 每次显示时都检查登录状态
 		this.loadUserData();
 		this.updateActiveTime(); // 更新用户活跃时间
+		
+		// 确保每次返回页面时都恢复管理员模式状态
+		this.restoreAdminMode();
 	},
 	
 	onUnload() {
@@ -495,6 +503,9 @@ export default {
 			if (!this.userInfo.isDeveloper) {
 				this.userInfo.isDeveloper = true; // 临时设置为开发者，便于测试
 			}
+			
+			// 加载分类数据
+			this.loadFoodCategories();
 		},
 		
 		// 更新用户活跃时间
@@ -563,16 +574,10 @@ export default {
 		
 		// 选择商品
 		selectFoodItem(item) {
-			uni.showModal({
-				title: item.name,
-				content: `${item.description}\n\n准备时间：${item.cookTime}分钟\n难度：${this.getDifficultyText(item.difficulty)}\n标签：${item.tags.join('、')}`,
-				confirmText: '点餐',
-				cancelText: '取消',
-				success: (res) => {
-					if (res.confirm) {
-						this.addToOrder(item);
-					}
-				}
+			// 跳转到菜品详情页面
+			const itemData = encodeURIComponent(JSON.stringify(item));
+			uni.navigateTo({
+				url: `/pages/food/detail?data=${itemData}`
 			});
 		},
 		
@@ -632,19 +637,9 @@ export default {
 		
 		// 编辑菜品
 		editFoodItem(item) {
-			uni.showModal({
-				title: '编辑菜品',
-				content: '跳转到菜品编辑页面',
-				confirmText: '编辑',
-				cancelText: '取消',
-				success: (res) => {
-					if (res.confirm) {
-						// 跳转到编辑页面，传递菜品信息
-						uni.navigateTo({
-							url: `/pages/food/edit?id=${item.id}&categoryId=${this.activeCategory}&mode=edit`
-						});
-					}
-				}
+			// 跳转到菜品编辑页面
+			uni.navigateTo({
+				url: `/pages/food/edit?id=${item.id}&categoryId=${this.activeCategory}&mode=edit`
 			});
 		},
 		
@@ -681,19 +676,9 @@ export default {
 		
 		// 添加新菜品
 		addNewFoodItem() {
-			uni.showModal({
-				title: '添加菜品',
-				content: '跳转到菜品添加页面',
-				confirmText: '添加',
-				cancelText: '取消',
-				success: (res) => {
-					if (res.confirm) {
-						// 跳转到添加页面
-						uni.navigateTo({
-							url: `/pages/food/edit?categoryId=${this.activeCategory}&mode=add`
-						});
-					}
-				}
+			// 跳转到菜品添加页面
+			uni.navigateTo({
+				url: `/pages/food/edit?categoryId=${this.activeCategory}&mode=add`
 			});
 		},
 		
@@ -711,93 +696,76 @@ export default {
 			});
 		},
 		
-		// 编辑分类
+		// 编辑分类（更新为跳转到分类编辑页面）
 		editCategory(category) {
-			uni.showModal({
-				title: '编辑分类',
-				editable: true,
-				placeholderText: category.name,
-				success: (res) => {
-					if (res.confirm && res.content && res.content.trim()) {
-						const categoryIndex = this.foodCategories.findIndex(cat => cat.id === category.id);
-						if (categoryIndex !== -1) {
-							this.foodCategories[categoryIndex].name = res.content.trim();
-							uni.showToast({
-								title: '修改成功',
-								icon: 'success'
-							});
-						}
-					}
-				}
+			// 跳转到分类编辑页面
+			uni.navigateTo({
+				url: `/pages/category/edit?mode=edit&categoryData=${encodeURIComponent(JSON.stringify(category))}`
 			});
 		},
 		
-		// 删除分类
-		deleteCategory(category) {
-			if (category.items.length > 0) {
-				uni.showModal({
-					title: '无法删除',
-					content: '该分类下还有菜品，请先删除所有菜品后再删除分类',
-					showCancel: false
-				});
-				return;
+		// 处理从分类编辑页面返回的更新
+		handleCategoryUpdate(eventData) {
+			console.log('接收到分类更新:', eventData);
+			
+			if (eventData.mode === 'add') {
+				// 添加新分类
+				const newCategory = {
+					...eventData.data,
+					id: this.nextCategoryId++,
+					items: [] // 确保新分类有空的items数组
+				};
+				this.foodCategories.push(newCategory);
+				
+				// 自动切换到新分类
+				this.selectFoodCategory(newCategory.id);
+				
+			} else if (eventData.mode === 'edit') {
+				// 更新已有分类
+				const categoryIndex = this.foodCategories.findIndex(cat => cat.id === eventData.originalId);
+				if (categoryIndex !== -1) {
+					// 保留原分类的items和id，更新其他信息
+					const updatedCategory = {
+						...this.foodCategories[categoryIndex],
+						name: eventData.data.name,
+						emoji: eventData.data.emoji,
+						image: eventData.data.image,
+						iconType: eventData.data.iconType
+					};
+					
+					this.$set(this.foodCategories, categoryIndex, updatedCategory);
+				}
+				
+			} else if (eventData.mode === 'delete') {
+				// 删除分类
+				this.performDeleteCategory({ id: eventData.originalId });
 			}
 			
-			uni.showModal({
-				title: '确认删除',
-				content: `确定要删除"${category.name}"分类吗？`,
-				confirmText: '删除',
-				cancelText: '取消',
-				confirmColor: '#FF6B95',
-				success: (res) => {
-					if (res.confirm) {
-						this.performDeleteCategory(category);
-					}
-				}
-			});
+			// 保存更新后的分类列表到缓存（模拟持久化）
+			this.saveFoodCategories();
 		},
 		
-		// 执行删除分类
-		performDeleteCategory(category) {
-			const categoryIndex = this.foodCategories.findIndex(cat => cat.id === category.id);
-			if (categoryIndex !== -1) {
-				this.foodCategories.splice(categoryIndex, 1);
-				
-				// 如果删除的是当前选中的分类，切换到第一个分类
-				if (this.activeCategory === category.id) {
-					this.activeCategory = this.foodCategories.length > 0 ? this.foodCategories[0].id : null;
-				}
-				
-				uni.showToast({
-					title: '删除成功',
-					icon: 'success'
-				});
+		// 保存分类数据到本地存储（模拟持久化）
+		saveFoodCategories() {
+			try {
+				uni.setStorageSync('foodCategories', JSON.stringify(this.foodCategories));
+				console.log('分类数据已保存');
+			} catch(e) {
+				console.error('保存分类数据失败:', e);
 			}
 		},
 		
-		// 添加新分类
-		addNewCategory() {
-			uni.showModal({
-				title: '添加分类',
-				editable: true,
-				placeholderText: '请输入分类名称',
-				success: (res) => {
-					if (res.confirm && res.content && res.content.trim()) {
-						const newCategory = {
-							id: this.nextCategoryId++,
-							name: res.content.trim(),
-							emoji: '🍽️', // 默认emoji，可以后续支持选择
-							items: []
-						};
-						
-						this.foodCategories.push(newCategory);
-						uni.showToast({
-							title: '添加成功',
-							icon: 'success'
-						});
-					}
+		// 从本地存储加载分类数据
+		loadFoodCategories() {
+			try {
+				const data = uni.getStorageSync('foodCategories');
+				if (data) {
+					this.foodCategories = JSON.parse(data);
+					console.log('已加载保存的分类数据');
 				}
-			});
+			} catch(e) {
+				console.error('加载分类数据失败:', e);
+			}
 		},
 		
 		// 临时设置管理员权限（用于测试）
@@ -812,11 +780,81 @@ export default {
 			}
 			
 			this.familyData.role = this.familyData.role === 'admin' ? 'member' : 'admin';
+			
+			// 保存管理员模式状态到本地存储
+			try {
+				uni.setStorageSync('adminModeEnabled', this.familyData.role === 'admin');
+				console.log('管理员模式状态已保存:', this.familyData.role === 'admin');
+			} catch(e) {
+				console.error('保存管理员模式状态失败:', e);
+			}
+			
 			uni.showToast({
 				title: this.familyData.role === 'admin' ? '已开启管理员模式' : '已关闭管理员模式',
 				icon: 'success'
 			});
-		}
+		},
+		
+		// 添加新分类
+		addNewCategory() {
+			// 跳转到分类添加页面
+			uni.navigateTo({
+				url: '/pages/category/edit?mode=add'
+			});
+		},
+		
+		// 处理菜品更新
+		handleFoodUpdate(eventData) {
+			console.log('接收到菜品更新:', eventData);
+			
+			const categoryIndex = this.foodCategories.findIndex(cat => cat.id === eventData.categoryId);
+			if (categoryIndex === -1) return;
+			
+			if (eventData.mode === 'add') {
+				// 添加新菜品
+				const newFood = {
+					...eventData.data,
+					id: this.nextFoodId++ // 设置新ID
+				};
+				this.foodCategories[categoryIndex].items.push(newFood);
+				
+			} else if (eventData.mode === 'edit') {
+				// 更新已有菜品
+				const itemIndex = this.foodCategories[categoryIndex].items.findIndex(item => item.id === eventData.data.id);
+				if (itemIndex !== -1) {
+					this.$set(this.foodCategories[categoryIndex].items, itemIndex, eventData.data);
+				}
+				
+			} else if (eventData.mode === 'delete') {
+				// 删除菜品
+				const itemIndex = this.foodCategories[categoryIndex].items.findIndex(item => item.id === eventData.foodId);
+				if (itemIndex !== -1) {
+					this.foodCategories[categoryIndex].items.splice(itemIndex, 1);
+				}
+			}
+			
+			// 保存更新后的数据到缓存
+			this.saveFoodCategories();
+		},
+		
+		// 恢复管理员模式状态
+		restoreAdminMode() {
+			try {
+				const adminModeEnabled = uni.getStorageSync('adminModeEnabled');
+				if (adminModeEnabled !== '') {
+					// 只有在用户有权限切换管理员模式时才应用存储的状态
+					if (this.canToggleAdminMode) {
+						const newRole = adminModeEnabled ? 'admin' : 'member';
+						if (this.familyData.role !== newRole) {
+							this.familyData.role = newRole;
+							console.log('从缓存恢复管理员模式状态:', adminModeEnabled);
+						}
+					}
+				}
+			} catch(e) {
+				console.error('恢复管理员模式状态失败:', e);
+			}
+		},
 	}
 }
 </script>

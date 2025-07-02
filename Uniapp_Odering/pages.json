@@ -119,6 +119,31 @@
 			}
 		},
 		{
+			"path": "pages/food/edit",
+			"style": {
+				"navigationBarTitleText": "编辑菜品",
+				"navigationBarBackgroundColor": "#FF6B95",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/food/detail",
+			"style": {
+				"navigationBarTitleText": "菜品详情",
+				"navigationBarBackgroundColor": "#FF6B95",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/category/edit",
+			"style": {
+				"navigationBarTitleText": "编辑分类",
+				"navigationBarBackgroundColor": "#FF6B95",
+				"navigationBarTextStyle": "white",
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "pages/ordering/index",
 			"style": {
 				"navigationBarTitleText": "家庭点餐",
