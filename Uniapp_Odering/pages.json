@@ -117,6 +117,54 @@
 				"navigationBarBackgroundColor": "#4CAF50",
 				"navigationBarTextStyle": "white"
 			}
+		},
+		{
+			"path": "pages/ordering/index",
+			"style": {
+				"navigationBarTitleText": "家庭点餐",
+				"navigationBarBackgroundColor": "#FF6B95",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/ordering/my-requests",
+			"style": {
+				"navigationBarTitleText": "我的点餐",
+				"navigationBarBackgroundColor": "#FF6B95",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/ordering/pending-requests",
+			"style": {
+				"navigationBarTitleText": "待确认点餐",
+				"navigationBarBackgroundColor": "#FF6B95",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/ordering/today-requests",
+			"style": {
+				"navigationBarTitleText": "今日点餐汇总",
+				"navigationBarBackgroundColor": "#FF6B95",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/ordering/meal-detail",
+			"style": {
+				"navigationBarTitleText": "餐品详情",
+				"navigationBarBackgroundColor": "#FF6B95",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/ordering/add-meal",
+			"style": {
+				"navigationBarTitleText": "添加餐品",
+				"navigationBarBackgroundColor": "#FF6B95",
+				"navigationBarTextStyle": "white"
+			}
 		}
 	],
 	"globalStyle": {

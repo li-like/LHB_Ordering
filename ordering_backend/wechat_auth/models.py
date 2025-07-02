@@ -1,6 +1,7 @@
 from django.db import models
 import random
 import string
+from django.utils import timezone
 
 # Create your models here.
 class WeChatUser(models.Model):  # 定义一个名为 WeChatUser 的数据库模型类
@@ -126,12 +127,11 @@ class CookingRecord(models.Model):
     user = models.ForeignKey(WeChatUser, on_delete=models.CASCADE, verbose_name='用户')
     family = models.ForeignKey(Family, on_delete=models.CASCADE, verbose_name='家庭')
     meal_name = models.CharField(max_length=128, verbose_name='菜品名称')
-    cook_date = models.DateTimeField(auto_now_add=True, verbose_name='下厨时间')  # 添加默认值
     participants = models.JSONField(default=list, verbose_name='参与用餐人员')  # 存储用户openid列表
     rating = models.IntegerField(default=5, verbose_name='评分')  # 1-5分
     notes = models.TextField(blank=True, verbose_name='备注')
     images = models.JSONField(default=list, verbose_name='照片列表')  # 存储图片URL列表
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='记录时间')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='记录时间')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
 
     class Meta:

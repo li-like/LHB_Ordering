@@ -25,6 +25,8 @@ urlpatterns = [  # 定义项目的 URL 路由列表
     path('api/wechat/', include('wechat_auth.urls')),
     # 包含 recipes 应用的 URL 配置，访问前缀为 /api/
     path('api/', include('recipes.urls')),
+    # 包含 ordering 应用的 URL 配置，访问前缀为 /api/
+    path('', include('ordering.urls')),
 ]
 
 # 在开发环境中处理媒体文件

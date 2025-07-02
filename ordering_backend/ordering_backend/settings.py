@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'wechat_auth',
     'recipes',
+    'ordering',  # 新增点餐功能应用
 ]
 
 MIDDLEWARE = [
