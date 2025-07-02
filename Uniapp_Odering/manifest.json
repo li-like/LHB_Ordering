@@ -1,0 +1,109 @@
+{
+	"name": "家庭点餐",
+	"appid": "__UNI__E16A8FB",
+	"description": "温馨家庭，美味共享 - 专为家庭设计的点餐小程序",
+	"versionName": "1.0.0",
+	"versionCode": "100",
+	"transformPx": false,
+	"app-plus": {
+		"usingComponents": true,
+		"nvueStyleCompiler": "uni-app",
+		"compilerVersion": 3,
+		"splashscreen": {
+			"alwaysShowBeforeRender": true,
+			"waiting": true,
+			"autoclose": true,
+			"delay": 0
+		},
+		"modules": {},
+		"distribute": {
+			"android": {
+				"permissions": [
+					"<uses-permission android:name=\"android.permission.CHANGE_NETWORK_STATE\"/>",
+					"<uses-permission android:name=\"android.permission.MOUNT_UNMOUNT_FILESYSTEMS\"/>",
+					"<uses-permission android:name=\"android.permission.VIBRATE\"/>",
+					"<uses-permission android:name=\"android.permission.READ_LOGS\"/>",
+					"<uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"/>",
+					"<uses-feature android:name=\"android.hardware.camera.autofocus\"/>",
+					"<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>",
+					"<uses-permission android:name=\"android.permission.CAMERA\"/>",
+					"<uses-permission android:name=\"android.permission.GET_ACCOUNTS\"/>",
+					"<uses-permission android:name=\"android.permission.READ_PHONE_STATE\"/>",
+					"<uses-permission android:name=\"android.permission.CHANGE_WIFI_STATE\"/>",
+					"<uses-permission android:name=\"android.permission.WAKE_LOCK\"/>",
+					"<uses-permission android:name=\"android.permission.FLASHLIGHT\"/>",
+					"<uses-feature android:name=\"android.hardware.camera\"/>",
+					"<uses-permission android:name=\"android.permission.WRITE_SETTINGS\"/>"
+				]
+			},
+			"ios": {},
+			"sdkConfigs": {}
+		}
+	},
+	"quickapp": {},
+	"mp-weixin": {
+		"appid": "wx2af20ae95d76daed",
+		"setting": {
+			"urlCheck": false,
+			"es6": true,
+			"enhance": true,
+			"postcss": true,
+			"preloadBackgroundData": false,
+			"minified": true,
+			"newFeature": false,
+			"coverView": true,
+			"nodeModules": false,
+			"autoAudits": false,
+			"showShadowRootInWxmlPanel": true,
+			"scopeDataCheck": false,
+			"uglifyFileName": false,
+			"checkInvalidKey": true,
+			"checkSiteMap": true,
+			"uploadWithSourceMap": true,
+			"compileHotReLoad": false,
+			"lazyloadPlaceholderEnable": false,
+			"useMultiFrameRuntime": true,
+			"useApiHook": true,
+			"useApiHostProcess": true,
+			"babelSetting": {
+				"ignore": [],
+				"disablePlugins": [],
+				"outputPath": ""
+			},
+			"enableEngineNative": false,
+			"useIsolateContext": true,
+			"userConfirmedBundleSwitch": false,
+			"packNpmManually": false,
+			"packNpmRelationList": [],
+			"minifyWXSS": true,
+			"disableUseStrict": false,
+			"minifyWXML": true,
+			"showES6CompileOption": false,
+			"useCompilerPlugins": false
+		},
+		"usingComponents": true,
+		"permission": {
+			"scope.userInfo": {
+				"desc": "用于完善用户资料"
+			},
+			"scope.userLocation": {
+				"desc": "用于获取地理位置"
+			}
+		},
+		"requiredPrivateInfos": [],
+		"lazyCodeLoading": "requiredComponents"
+	},
+	"mp-alipay": {
+		"usingComponents": true
+	},
+	"mp-baidu": {
+		"usingComponents": true
+	},
+	"mp-toutiao": {
+		"usingComponents": true
+	},
+	"uniStatistics": {
+		"enable": false
+	},
+	"vueVersion": "3"
+}

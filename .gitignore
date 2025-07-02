@@ -1,0 +1,56 @@
+# 依赖文件
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 编译输出
+dist/
+build/
+.tmp/
+.nuxt/
+
+# 环境配置文件
+.env
+.env.local
+.env.*.local
+
+# IDE文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+*.log
+
+# Python相关
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Django相关
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+local_settings.py
+
+# UniApp相关
+unpackage/
+.hbuilderx/
+
+# 其他
+*.tmp
+*.temp
+.cache/

@@ -1,0 +1,154 @@
+{
+	"pages": [{
+			"path": "pages/login/login",
+			"style": {
+				"navigationBarTitleText": "登录",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "柯梦快点餐",
+				"navigationBarBackgroundColor": "#FF6B95",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/family/family",
+			"style": {
+				"navigationBarTitleText": "家庭成员",
+				"navigationBarBackgroundColor": "#FF6B95",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/profile/profile",
+			"style": {
+				"navigationBarTitleText": "个人中心",
+				"navigationBarBackgroundColor": "#FF6B95",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/profile/userStats",
+			"style": {
+				"navigationBarTitleText": "用户统计",
+				"navigationBarBackgroundColor": "#FF6B95",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/profile/favoriteMeals",
+			"style": {
+				"navigationBarTitleText": "喜爱菜品",
+				"navigationBarBackgroundColor": "#FF6B95",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/profile/cookingHistory",
+			"style": {
+				"navigationBarTitleText": "下厨记录",
+				"navigationBarBackgroundColor": "#FF6B95",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/profile/sharedRecipes",
+			"style": {
+				"navigationBarTitleText": "分享菜谱",
+				"navigationBarBackgroundColor": "#FF6B95",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/cooking/cooking",
+			"style": {
+				"navigationBarTitleText": "用餐记录",
+				"navigationBarBackgroundColor": "#FF6B95",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/favorite/favorite",
+			"style": {
+				"navigationBarTitleText": "家庭喜爱菜品",
+				"navigationBarBackgroundColor": "#FF6B95",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/recipe/index",
+			"style": {
+				"navigationBarTitleText": "菜谱大全",
+				"navigationBarBackgroundColor": "#4CAF50",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/recipe/detail",
+			"style": {
+				"navigationBarTitleText": "菜谱详情",
+				"navigationBarBackgroundColor": "#4CAF50",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/recipe/create",
+			"style": {
+				"navigationBarTitleText": "创建菜谱",
+				"navigationBarBackgroundColor": "#4CAF50",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/recipe/edit",
+			"style": {
+				"navigationBarTitleText": "编辑菜谱",
+				"navigationBarBackgroundColor": "#4CAF50",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/recipe/note",
+			"style": {
+				"navigationBarTitleText": "制作笔记",
+				"navigationBarBackgroundColor": "#4CAF50",
+				"navigationBarTextStyle": "white"
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "white",
+		"navigationBarTitleText": "家庭点餐",
+		"navigationBarBackgroundColor": "#FF6B95",
+		"backgroundColor": "#FFF5F8"
+	},
+	"tabBar": {
+		"color": "#C0C4CC",
+		"selectedColor": "#FF6B95",
+		"borderStyle": "white",
+		"backgroundColor": "#FFFFFF",
+		"list": [{
+				"pagePath": "pages/index/index",
+				"iconPath": "/static/tabs/home.png",
+				"selectedIconPath": "/static/tabs/home-active.png",
+				"text": "点餐"
+			},
+			{
+				"pagePath": "pages/family/family",
+				"iconPath": "/static/tabs/family.png",
+				"selectedIconPath": "/static/tabs/family-active.png",
+				"text": "家庭"
+			},
+			{
+				"pagePath": "pages/profile/profile",
+				"iconPath": "/static/tabs/profile.png",
+				"selectedIconPath": "/static/tabs/profile-active.png",
+				"text": "我的"
+			}
+		]
+	},
+	"uniIdRouter": {}
+}

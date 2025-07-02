@@ -1,0 +1,33 @@
+{
+  "name": "family-ordering",
+  "version": "1.0.0",
+  "description": "温馨家庭，美味共享 - 专为家庭设计的点餐小程序",
+  "main": "main.js",
+  "scripts": {
+    "dev:mp-weixin": "uni build -p mp-weixin",
+    "build:mp-weixin": "uni build -p mp-weixin"
+  },
+  "uni-app": {
+    "scripts": {}
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@dcloudio/uni-app-plus": "^3.0.0-alpha-4010420240422001",
+    "@dcloudio/uni-mp-weixin": "^3.0.0-alpha-4010420240422001",
+    "@dcloudio/vite-plugin-uni": "^3.0.0-alpha-4010420240422001",
+    "vue": "^3.4.21",
+    "vite": "^5.2.8"
+  },
+  "browserslist": [
+    "Android >= 4.4",
+    "ios >= 9"
+  ],
+  "keywords": [
+    "uniapp",
+    "微信小程序",
+    "家庭点餐",
+    "vue3"
+  ],
+  "author": "",
+  "license": "MIT"
+}
