@@ -15,7 +15,7 @@ router.register(r'stats', views.FamilyMealStatsViewSet, basename='familymealstat
 
 # URL模式
 urlpatterns = [
-    path('api/ordering/', include(router.urls)),
+    path('', include(router.urls)),
 ]
 
 # API路由说明：

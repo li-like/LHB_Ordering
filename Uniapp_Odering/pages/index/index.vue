@@ -22,8 +22,8 @@
 				<view class="action-icon ordering-icon">
 					<text class="icon-text">🍽️</text>
 				</view>
-				<text class="action-label">家庭点餐</text>
-				<text class="action-desc">点餐下单</text>
+				<text class="action-label">家庭餐厅</text>
+				<text class="action-desc">查看点餐</text>
 			</view>
 			
 			<view class="action-item" @click="randomOrder">
@@ -151,11 +151,119 @@
 				</scroll-view>
 			</view>
 		</view>
+		
+		<!-- 点餐车管理浮窗 -->
+		<view v-if="showCart" class="cart-modal">
+			<view class="cart-content">
+				<view class="cart-header">
+					<text class="cart-title">点餐车</text>
+					<view class="close-btn" @click="hideCartModal">
+						<text class="close-icon">✖️</text>
+					</view>
+				</view>
+				
+				<!-- 点餐车商品列表 -->
+				<view class="cart-items">
+					<view class="cart-item" v-for="item in cartItems" :key="item.id">
+						<image class="cart-item-image" :src="item.image" mode="aspectFill"></image>
+						<view class="cart-item-info">
+							<text class="cart-item-name">{{ item.name }}</text>
+							<text class="cart-item-desc">{{ item.description }}</text>
+							<view class="cart-item-tags">
+								<text class="cart-item-tag" v-for="tag in item.tags" :key="tag">{{ tag }}</text>
+							</view>
+							<view class="cart-item-footer">
+								<view class="cart-item-meta">
+									<text class="cart-cook-time">🕒 {{ item.cookTime }}分钟</text>
+									<text class="cart-difficulty">{{ getDifficultyText(item.difficulty) }}</text>
+								</view>
+								<view class="cart-item-actions">
+									<view class="quantity-control">
+										<view class="quantity-btn" @click.stop="decreaseQuantity(item)">
+											<text class="btn-text">-</text>
+										</view>
+										<text class="quantity-text">{{ item.quantity }}</text>
+										<view class="quantity-btn" @click.stop="increaseQuantity(item)">
+											<text class="btn-text">+</text>
+										</view>
+									</view>
+									<view class="remove-btn" @click.stop="removeFromCart(item)">
+										<text class="remove-text">移除</text>
+									</view>
+								</view>
+							</view>
+						</view>
+					</view>
+				</view>
+				
+				<!-- 点餐车操作区域 -->
+				<view class="cart-actions">
+					<view class="clear-cart-btn" @click="clearCart">
+						<text class="btn-text">清空点餐车</text>
+					</view>
+					<view class="submit-order-btn" @click="submitOrder">
+						<text class="btn-text">提交订单</text>
+					</view>
+				</view>
+			</view>
+		</view>
+		
+		<!-- 点餐车浮动按钮 -->
+		<view v-if="hasCartItems" class="cart-float-btn" @click="showCartModal">
+			<view class="cart-icon">🛒</view>
+			<view class="cart-badge">{{ cartItemCount }}</view>
+		</view>
+		
+		<!-- 点餐车弹窗 -->
+		<view v-if="showCart" class="cart-modal-overlay" @click="hideCartModal">
+			<view class="cart-modal" @click.stop="">
+				<view class="cart-header">
+					<text class="cart-title">我的点餐</text>
+					<view class="cart-header-actions">
+						<text class="clear-btn" @click="clearCart">清空</text>
+						<text class="close-btn" @click="hideCartModal">×</text>
+					</view>
+				</view>
+				
+				<scroll-view class="cart-content" scroll-y="true">
+					<view class="cart-item" v-for="item in cartItems" :key="item.id">
+						<image class="cart-item-image" :src="item.image" mode="aspectFill"></image>
+						<view class="cart-item-info">
+							<text class="cart-item-name">{{ item.name }}</text>
+							<text class="cart-item-desc">{{ item.description }}</text>
+							<view class="cart-item-tags">
+								<text class="cart-item-tag" v-for="tag in item.tags" :key="tag">{{ tag }}</text>
+							</view>
+						</view>
+						<view class="cart-item-actions">
+							<view class="quantity-controls">
+								<view class="quantity-btn" @click="decreaseQuantity(item)">-</view>
+								<text class="quantity-text">{{ item.quantity }}</text>
+								<view class="quantity-btn" @click="increaseQuantity(item)">+</view>
+							</view>
+							<view class="remove-btn" @click="removeFromCart(item)">
+								<text class="remove-text">移除</text>
+							</view>
+						</view>
+					</view>
+				</scroll-view>
+				
+				<view class="cart-footer">
+					<view class="cart-summary">
+						<text class="total-text">共 {{ cartItemCount }} 个商品</text>
+					</view>
+					<view class="submit-btn" @click="submitOrder">
+						<text class="submit-text">提交订单</text>
+					</view>
+				</view>
+			</view>
+		</view>
 	</view>
 </template>
 
 <script>
 import userManager from '../../utils/userManager.js'
+import orderingManager from '../../utils/orderingManager.js'
 
 export default {
 	data() {
@@ -163,9 +271,10 @@ export default {
 			userInfo: {},
 			familyData: {},
 			greeting: '',
-			activeCategory: 1, // 当前选中的分类ID
+			activeCategory: null, // 当前选中的分类ID，将在数据加载后设置
 			nextFoodId: 1000, // 下一个商品ID
 			nextCategoryId: 10, // 下一个分类ID
+			loading: false, // 加载状态
 			recommendations: [
 				{
 					id: 1,
@@ -189,203 +298,25 @@ export default {
 					cookTime: 20
 				}
 			],
-			// 食物分类及对应商品
-			foodCategories: [
-				{
-					id: 1,
-					name: '荤菜',
-					emoji: '🥩',
-					items: [
-						{
-							id: 101,
-							name: '红烧肉',
-							description: '肥瘦相间，软糯香甜，色泽红亮',
-							image: '/static/dishes/hongshaorou.jpg',
-							tags: ['经典', '下饭', '节日'],
-							cookTime: 45,
-							difficulty: 2
-						},
-						{
-							id: 102,
-							name: '糖醋排骨',
-							description: '酸甜开胃，色泽诱人，老少皆宜',
-							image: '/static/dishes/tangcupaigu.jpg',
-							tags: ['酸甜', '开胃', '家常'],
-							cookTime: 35,
-							difficulty: 2
-						},
-						{
-							id: 103,
-							name: '可乐鸡翅',
-							description: '嫩滑多汁，香甜可口，孩子最爱',
-							image: '/static/dishes/kelejichi.jpg',
-							tags: ['香甜', '嫩滑', '简单'],
-							cookTime: 25,
-							difficulty: 1
-						},
-						{
-							id: 104,
-							name: '蒜蓉蒸排骨',
-							description: '蒜香浓郁，嫩滑爽口，营养丰富',
-							image: '/static/dishes/suanrongpaigu.jpg',
-							tags: ['蒜香', '清蒸', '营养'],
-							cookTime: 30,
-							difficulty: 1
-						}
-					]
-				},
-				{
-					id: 2,
-					name: '素菜',
-					emoji: '🥬',
-					items: [
-						{
-							id: 201,
-							name: '清炒菠菜',
-							description: '鲜嫩爽脆，清香淡雅，营养丰富',
-							image: '/static/dishes/qingchaobocai.jpg',
-							tags: ['清淡', '快手', '营养'],
-							cookTime: 5,
-							difficulty: 1
-						},
-						{
-							id: 202,
-							name: '麻婆豆腐',
-							description: '麻辣鲜香，嫩滑爽口，经典川菜',
-							image: '/static/dishes/mapodoufu.jpg',
-							tags: ['麻辣', '经典', '下饭'],
-							cookTime: 15,
-							difficulty: 2
-						},
-						{
-							id: 203,
-							name: '蒜蓉西兰花',
-							description: '翠绿爽脆，蒜香浓郁，健康美味',
-							image: '/static/dishes/suanrongxilanhua.jpg',
-							tags: ['健康', '爽脆', '蒜香'],
-							cookTime: 8,
-							difficulty: 1
-						}
-					]
-				},
-				{
-					id: 3,
-					name: '汤品',
-					emoji: '🍲',
-					items: [
-						{
-							id: 301,
-							name: '番茄鸡蛋汤',
-							description: '酸甜开胃，营养丰富，家常必备',
-							image: '/static/dishes/fanqiejidantang.jpg',
-							tags: ['酸甜', '营养', '家常'],
-							cookTime: 10,
-							difficulty: 1
-						},
-						{
-							id: 302,
-							name: '冬瓜排骨汤',
-							description: '清淡鲜美，消暑解腻，营养滋补',
-							image: '/static/dishes/dongguapaigu.jpg',
-							tags: ['清淡', '滋补', '消暑'],
-							cookTime: 60,
-							difficulty: 1
-						},
-						{
-							id: 303,
-							name: '紫菜蛋花汤',
-							description: '鲜香清淡，制作简单，营养美味',
-							image: '/static/dishes/zicaidanhua.jpg',
-							tags: ['清淡', '简单', '快手'],
-							cookTime: 5,
-							difficulty: 1
-						}
-					]
-				},
-				{
-					id: 4,
-					name: '主食',
-					emoji: '🍚',
-					items: [
-						{
-							id: 401,
-							name: '蛋炒饭',
-							description: '粒粒分明，香滑可口，经典主食',
-							image: '/static/dishes/danchaofan.jpg',
-							tags: ['经典', '香滑', '主食'],
-							cookTime: 10,
-							difficulty: 1
-						},
-						{
-							id: 402,
-							name: '煲仔饭',
-							description: '米饭香糯，配菜丰富，一锅出菜',
-							image: '/static/dishes/baozaifan.jpg',
-							tags: ['香糯', '丰富', '一锅出'],
-							cookTime: 40,
-							difficulty: 2
-						}
-					]
-				},
-				{
-					id: 5,
-					name: '小食',
-					emoji: '🥟',
-					items: [
-						{
-							id: 501,
-							name: '煎饺',
-							description: '外酥内嫩，鲜美多汁，早餐首选',
-							image: '/static/dishes/jianjiao.jpg',
-							tags: ['酥脆', '多汁', '早餐'],
-							cookTime: 15,
-							difficulty: 2
-						},
-						{
-							id: 502,
-							name: '小笼包',
-							description: '皮薄馅嫩，汤汁丰富，精致美味',
-							image: '/static/dishes/xiaolongbao.jpg',
-							tags: ['精致', '汤汁', '美味'],
-							cookTime: 30,
-							difficulty: 3
-						}
-					]
-				},
-				{
-					id: 6,
-					name: '甜品',
-					emoji: '🍰',
-					items: [
-						{
-							id: 601,
-							name: '红豆汤',
-							description: '香甜润燥，温暖贴心，营养丰富',
-							image: '/static/dishes/hongdoutang.jpg',
-							tags: ['香甜', '温暖', '营养'],
-							cookTime: 45,
-							difficulty: 1
-						},
-						{
-							id: 602,
-							name: '银耳莲子汤',
-							description: '滋润养颜，清甜爽口，美容佳品',
-							image: '/static/dishes/yinerlianzi.jpg',
-							tags: ['滋润', '养颜', '清甜'],
-							cookTime: 50,
-							difficulty: 1
-						}
-					]
-				}
-			]
+			// 食物分类及对应商品（初始为空，从后端加载）
+			foodCategories: [],
+			
+			// 点餐车相关数据
+			cartItems: [], // 点餐车商品列表
+			showCart: false, // 是否显示点餐车浮窗
+			cartTotal: 0 // 点餐车总价（如果有价格的话）
 		}
 	},
 	
 	computed: {
 		// 当前选中分类的商品列表
 		currentCategoryItems() {
+			if (!this.activeCategory) {
+				return [];
+			}
+			
 			const category = this.foodCategories.find(cat => cat.id === this.activeCategory);
-			return category ? category.items : [];
+			return category ? (category.items || []) : [];
 		},
 		
 		// 判断是否为管理员（基于用户角色或家庭权限）
@@ -405,6 +336,16 @@ export default {
 			return this.userInfo.isDeveloper === true || 
 				   this.userInfo.role === 'super_admin' ||
 				   this.familyData.role === 'creator'; // 家庭创建者可以切换
+		},
+		
+		// 点餐车商品数量
+		cartItemCount() {
+			return this.cartItems.reduce((total, item) => total + item.quantity, 0);
+		},
+		
+		// 点餐车是否有商品
+		hasCartItems() {
+			return this.cartItems.length > 0;
 		}
 	},
 	
@@ -418,11 +359,11 @@ export default {
 		// 设置问候语
 		this.setGreeting();
 		
-		// 从本地存储加载分类和菜品数据
-		this.loadFoodCategories();
+		// 从后端加载分类和菜品数据
+		this.loadBackendData();
 		
-		// 设置默认激活分类
-		this.selectFoodCategory(this.activeCategory);
+		// 加载点餐车数据
+		this.loadCartFromStorage();
 	},
 	
 	onShow() {
@@ -504,8 +445,7 @@ export default {
 				this.userInfo.isDeveloper = true; // 临时设置为开发者，便于测试
 			}
 			
-			// 加载分类数据
-			this.loadFoodCategories();
+			// 注意：分类数据在onLoad中通过loadBackendData()加载，这里不需要单独加载
 		},
 		
 		// 更新用户活跃时间
@@ -583,12 +523,29 @@ export default {
 		
 		// 添加到点餐车
 		addToOrder(item) {
+			// 检查商品是否已在点餐车中
+			const existingItemIndex = this.cartItems.findIndex(cartItem => cartItem.id === item.id);
+			
+			if (existingItemIndex !== -1) {
+				// 如果已存在，增加数量
+				this.cartItems[existingItemIndex].quantity += 1;
+			} else {
+				// 如果不存在，添加新商品
+				this.cartItems.push({
+					...item,
+					quantity: 1,
+					addTime: new Date().getTime() // 添加时间戳
+				});
+			}
+			
 			uni.showToast({
 				title: `已添加${item.name}到点餐车`,
 				icon: 'success',
 				duration: 1500
 			});
-			// 这里后续可以添加到点餐车的逻辑
+			
+			// 保存到本地存储
+			this.saveCartToStorage();
 		},
 		
 		// 获取难度文本
@@ -626,11 +583,16 @@ export default {
 			// 这个方法已经不需要了，被selectFoodCategory替代
 		},
 		
-		// 跳转到点餐页面
+		// 跳转到点餐页面（现在主页就是点餐页面，显示点餐车）
 		goToOrdering() {
-			uni.navigateTo({
-				url: '/pages/ordering/index'
-			});
+			if (this.hasCartItems) {
+				this.showCartModal();
+			} else {
+				uni.showToast({
+					title: '请先选择要点的菜品',
+					icon: 'none'
+				});
+			}
 		},
 		
 		// === 管理员功能 ===
@@ -660,17 +622,30 @@ export default {
 		},
 		
 		// 执行删除菜品
-		performDeleteFood(item) {
-			const categoryIndex = this.foodCategories.findIndex(cat => cat.id === this.activeCategory);
-			if (categoryIndex !== -1) {
-				const itemIndex = this.foodCategories[categoryIndex].items.findIndex(food => food.id === item.id);
-				if (itemIndex !== -1) {
-					this.foodCategories[categoryIndex].items.splice(itemIndex, 1);
-					uni.showToast({
-						title: '删除成功',
-						icon: 'success'
-					});
+		async performDeleteFood(item) {
+			try {
+				// 调用后端API删除菜品
+				await orderingManager.deleteMeal(item.id);
+				
+				// 删除成功后，从本地数据中移除
+				const categoryIndex = this.foodCategories.findIndex(cat => cat.id === this.activeCategory);
+				if (categoryIndex !== -1) {
+					const itemIndex = this.foodCategories[categoryIndex].items.findIndex(food => food.id === item.id);
+					if (itemIndex !== -1) {
+						this.foodCategories[categoryIndex].items.splice(itemIndex, 1);
+					}
 				}
+				
+				uni.showToast({
+					title: '删除成功',
+					icon: 'success'
+				});
+			} catch (error) {
+				console.error('删除菜品失败:', error);
+				uni.showToast({
+					title: '删除失败',
+					icon: 'error'
+				});
 			}
 		},
 		
@@ -704,48 +679,58 @@ export default {
 			});
 		},
 		
-		// 处理从分类编辑页面返回的更新
-		handleCategoryUpdate(eventData) {
-			console.log('接收到分类更新:', eventData);
-			
-			if (eventData.mode === 'add') {
-				// 添加新分类
-				const newCategory = {
-					...eventData.data,
-					id: this.nextCategoryId++,
-					items: [] // 确保新分类有空的items数组
-				};
-				this.foodCategories.push(newCategory);
-				
-				// 自动切换到新分类
-				this.selectFoodCategory(newCategory.id);
-				
-			} else if (eventData.mode === 'edit') {
-				// 更新已有分类
-				const categoryIndex = this.foodCategories.findIndex(cat => cat.id === eventData.originalId);
-				if (categoryIndex !== -1) {
-					// 保留原分类的items和id，更新其他信息
-					const updatedCategory = {
-						...this.foodCategories[categoryIndex],
-						name: eventData.data.name,
-						emoji: eventData.data.emoji,
-						image: eventData.data.image,
-						iconType: eventData.data.iconType
-					};
-					
-					this.$set(this.foodCategories, categoryIndex, updatedCategory);
+		// 删除分类
+		deleteCategory(category) {
+			uni.showModal({
+				title: '确认删除',
+				content: `确定要删除"${category.name}"分类吗？删除后该分类下的所有菜品也将被删除，此操作不可恢复。`,
+				confirmText: '删除',
+				cancelText: '取消',
+				confirmColor: '#FF6B95',
+				success: (res) => {
+					if (res.confirm) {
+						this.performDeleteCategory(category);
+					}
 				}
-				
-			} else if (eventData.mode === 'delete') {
-				// 删除分类
-				this.performDeleteCategory({ id: eventData.originalId });
-			}
-			
-			// 保存更新后的分类列表到缓存（模拟持久化）
-			this.saveFoodCategories();
+			});
 		},
 		
-		// 保存分类数据到本地存储（模拟持久化）
+		// 执行删除分类
+		async performDeleteCategory(category) {
+			try {
+				// 调用后端API删除分类
+				await orderingManager.deleteCategory(category.id);
+				
+				// 删除成功后，从本地数据中移除
+				const categoryIndex = this.foodCategories.findIndex(cat => cat.id === category.id);
+				if (categoryIndex !== -1) {
+					this.foodCategories.splice(categoryIndex, 1);
+				}
+				
+				// 如果删除的是当前选中的分类，切换到第一个分类
+				if (this.activeCategory === category.id) {
+					// 选择第一个可用分类
+					if (this.foodCategories.length > 0) {
+						this.selectFoodCategory(this.foodCategories[0].id);
+					} else {
+						this.activeCategory = null;
+					}
+				}
+				
+				uni.showToast({
+					title: '删除成功',
+					icon: 'success'
+				});
+			} catch (error) {
+				console.error('删除分类失败:', error);
+				uni.showToast({
+					title: '删除失败',
+					icon: 'error'
+				});
+			}
+		},
+		
+		// 保存更新后的分类列表到缓存（模拟持久化）
 		saveFoodCategories() {
 			try {
 				uni.setStorageSync('foodCategories', JSON.stringify(this.foodCategories));
@@ -755,17 +740,96 @@ export default {
 			}
 		},
 		
-		// 从本地存储加载分类数据
-		loadFoodCategories() {
+		// 从后端加载分类和菜品数据
+		async loadBackendData() {
+			this.loading = true;
 			try {
-				const data = uni.getStorageSync('foodCategories');
-				if (data) {
-					this.foodCategories = JSON.parse(data);
-					console.log('已加载保存的分类数据');
-				}
-			} catch(e) {
-				console.error('加载分类数据失败:', e);
+				// 加载分类
+				await this.loadCategoriesFromBackend();
+				// 加载菜品
+				await this.loadMealsFromBackend();
+			} catch (error) {
+				console.error('加载后端数据失败:', error);
+				uni.showToast({
+					title: '加载数据失败',
+					icon: 'error'
+				});
+				// 降级策略：如果后端加载失败，显示空数据或重试
+				// 不再调用已删除的loadFoodCategories方法
+			} finally {
+				this.loading = false;
 			}
+		},
+		
+		// 从后端加载分类
+		async loadCategoriesFromBackend() {
+			try {
+				const categories = await orderingManager.getCategoriesSimple();
+				console.log('获取到的分类:', categories);
+				
+				// 转换数据格式以适配前端
+				this.foodCategories = categories.map(cat => ({
+					id: cat.id,
+					name: cat.name,
+					emoji: cat.icon || '🍽️',
+					items: [] // 初始为空，后续加载菜品
+				}));
+				
+				// 如果有分类，设置第一个分类为默认选中
+				if (this.foodCategories.length > 0 && !this.activeCategory) {
+					this.activeCategory = this.foodCategories[0].id;
+				}
+				
+			} catch (error) {
+				console.error('加载分类失败:', error);
+				throw error;
+			}
+		},
+		
+		// 从后端加载菜品
+		async loadMealsFromBackend() {
+			try {
+				const meals = await orderingManager.getMeals({ available_only: 'true' });
+				console.log('获取到的菜品:', meals);
+				
+				// 按分类组织菜品数据
+				meals.forEach(meal => {
+					// 转换数据格式
+					const mealItem = {
+						id: meal.id,
+						name: meal.name,
+						description: meal.description || '暂无描述',
+						image: meal.image || '/static/food-decoration.png',
+						tags: meal.tags || [],
+						cookTime: meal.prep_time || 30,
+						difficulty: this.mapDifficulty(meal.difficulty),
+						categoryId: meal.category
+					};
+					
+					// 找到对应的分类并添加菜品
+					const category = this.foodCategories.find(cat => cat.id === meal.category);
+					if (category) {
+						if (!category.items) {
+							category.items = [];
+						}
+						category.items.push(mealItem);
+					}
+				});
+				
+			} catch (error) {
+				console.error('加载菜品失败:', error);
+				throw error;
+			}
+		},
+		
+		// 映射难度值
+		mapDifficulty(difficulty) {
+			const difficultyMap = {
+				'easy': 1,
+				'medium': 2,
+				'hard': 3
+			};
+			return difficultyMap[difficulty] || 1;
 		},
 		
 		// 临时设置管理员权限（用于测试）
@@ -853,6 +917,132 @@ export default {
 				}
 			} catch(e) {
 				console.error('恢复管理员模式状态失败:', e);
+			}
+		},
+		
+		// === 点餐车管理功能 ===
+		
+		// 显示点餐车
+		showCartModal() {
+			if (!this.hasCartItems) {
+				uni.showToast({
+					title: '点餐车为空',
+					icon: 'none'
+				});
+				return;
+			}
+			this.showCart = true;
+		},
+		
+		// 隐藏点餐车
+		hideCartModal() {
+			this.showCart = false;
+		},
+		
+		// 增加商品数量
+		increaseQuantity(item) {
+			const cartItem = this.cartItems.find(cartItem => cartItem.id === item.id);
+			if (cartItem) {
+				cartItem.quantity += 1;
+				this.saveCartToStorage();
+			}
+		},
+		
+		// 减少商品数量
+		decreaseQuantity(item) {
+			const cartItemIndex = this.cartItems.findIndex(cartItem => cartItem.id === item.id);
+			if (cartItemIndex !== -1) {
+				if (this.cartItems[cartItemIndex].quantity > 1) {
+					this.cartItems[cartItemIndex].quantity -= 1;
+				} else {
+					// 数量为1时，移除商品
+					this.cartItems.splice(cartItemIndex, 1);
+				}
+				this.saveCartToStorage();
+			}
+		},
+		
+		// 从点餐车移除商品
+		removeFromCart(item) {
+			const cartItemIndex = this.cartItems.findIndex(cartItem => cartItem.id === item.id);
+			if (cartItemIndex !== -1) {
+				this.cartItems.splice(cartItemIndex, 1);
+				this.saveCartToStorage();
+				uni.showToast({
+					title: '已移除',
+					icon: 'success'
+				});
+			}
+		},
+		
+		// 清空点餐车
+		clearCart() {
+			uni.showModal({
+				title: '确认清空',
+				content: '确定要清空点餐车吗？',
+				success: (res) => {
+					if (res.confirm) {
+						this.cartItems = [];
+						this.saveCartToStorage();
+						uni.showToast({
+							title: '已清空点餐车',
+							icon: 'success'
+						});
+					}
+				}
+			});
+		},
+		
+		// 提交订单
+		submitOrder() {
+			if (!this.hasCartItems) {
+				uni.showToast({
+					title: '点餐车为空',
+					icon: 'none'
+				});
+				return;
+			}
+			
+			// 这里可以跳转到订单确认页面或直接提交
+			uni.showModal({
+				title: '提交订单',
+				content: `确定要提交包含${this.cartItemCount}个商品的订单吗？`,
+				success: (res) => {
+					if (res.confirm) {
+						// TODO: 实现后端提交逻辑
+						uni.showToast({
+							title: '订单提交成功',
+							icon: 'success'
+						});
+						
+						// 提交成功后清空点餐车
+						this.cartItems = [];
+						this.saveCartToStorage();
+						this.hideCartModal();
+					}
+				}
+			});
+		},
+		
+		// 保存点餐车到本地存储
+		saveCartToStorage() {
+			try {
+				uni.setStorageSync('cartItems', JSON.stringify(this.cartItems));
+			} catch (e) {
+				console.error('保存点餐车数据失败:', e);
+			}
+		},
+		
+		// 从本地存储加载点餐车
+		loadCartFromStorage() {
+			try {
+				const cartData = uni.getStorageSync('cartItems');
+				if (cartData) {
+					this.cartItems = JSON.parse(cartData);
+				}
+			} catch (e) {
+				console.error('加载点餐车数据失败:', e);
+				this.cartItems = [];
 			}
 		},
 	}
@@ -1326,21 +1516,408 @@ export default {
 	color: #FF6B95;
 }
 
-.add-icon {
-	width: 60rpx;
-	height: 60rpx;
-	border-radius: 50%;
-	background: rgba(255, 107, 149, 0.1);
+/* 点餐车管理浮窗样式 */
+.cart-modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.7);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 36rpx;
+	z-index: 1000;
+}
+
+.cart-content {
+	width: 90%;
+	max-width: 600rpx;
+	background: #FFFFFF;
+	border-radius: 20rpx;
+	overflow: hidden;
+	box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.2);
+	display: flex;
+	flex-direction: column;
+}
+
+.cart-header {
+	padding: 20rpx;
+	background: linear-gradient(135deg, #FF6B95, #FFB6C1);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.cart-title {
+	font-size: 28rpx;
 	font-weight: bold;
+	color: #FFFFFF;
+}
+
+.close-btn {
+	width: 40rpx;
+	height: 40rpx;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.2);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.close-icon {
+	font-size: 24rpx;
+	color: #FFFFFF;
+}
+
+/* 点餐车商品列表 */
+.cart-items {
+	flex: 1;
+	padding: 20rpx;
+	overflow-y: auto;
+}
+
+.cart-item {
+	display: flex;
+	background: #F8F9FA;
+	border-radius: 16rpx;
+	margin-bottom: 16rpx;
+	overflow: hidden;
+	border: 1rpx solid #E9ECEF;
+}
+
+.cart-item-image {
+	width: 120rpx;
+	height: 120rpx;
+	flex-shrink: 0;
+}
+
+.cart-item-info {
+	flex: 1;
+	padding: 16rpx;
+	display: flex;
+	flex-direction: column;
+}
+
+.cart-item-name {
+	font-size: 26rpx;
+	font-weight: 500;
+	color: #333333;
+	margin-bottom: 8rpx;
+}
+
+.cart-item-desc {
+	font-size: 22rpx;
+	color: #666666;
+	margin-bottom: 12rpx;
+	line-height: 1.4;
+}
+
+.cart-item-tags {
+	margin-bottom: 12rpx;
+}
+
+.cart-item-tag {
+	display: inline-block;
+	font-size: 20rpx;
+	color: #FF6B95;
+	background: rgba(255, 107, 149, 0.1);
+	padding: 4rpx 8rpx;
+	border-radius: 8rpx;
+	margin-right: 8rpx;
+}
+
+.cart-item-actions {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12rpx;
+}
+
+.quantity-controls {
+	display: flex;
+	align-items: center;
+	gap: 8rpx;
+	background: #F8F8F8;
+	border-radius: 20rpx;
+	padding: 4rpx;
+}
+
+.quantity-btn {
+	width: 36rpx;
+	height: 36rpx;
+	border-radius: 50%;
+	background: white;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 24rpx;
+	font-weight: bold;
+	color: #FF6B95;
+	box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
+}
+
+.quantity-text {
+	font-size: 24rpx;
+	font-weight: bold;
+	color: #333333;
+	min-width: 30rpx;
+	text-align: center;
+}
+
+.remove-btn {
+	background: rgba(255, 68, 68, 0.1);
+	padding: 6rpx 12rpx;
+	border-radius: 12rpx;
+}
+
+.remove-text {
+	font-size: 20rpx;
+	color: #FF4444;
+}
+
+.cart-footer {
+	padding: 30rpx;
+	border-top: 1rpx solid #F0F0F0;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.cart-summary {
+	flex: 1;
+}
+
+.total-text {
+	font-size: 28rpx;
+	color: #333333;
+	font-weight: bold;
+}
+
+.submit-btn {
+	background: linear-gradient(135deg, #FF6B95, #FF8C94);
+	padding: 20rpx 40rpx;
+	border-radius: 25rpx;
+	box-shadow: 0 4rpx 12rpx rgba(255, 107, 149, 0.3);
+}
+
+/* 点餐车浮动按钮 */
+.cart-float-btn {
+	position: fixed;
+	right: 30rpx;
+	bottom: 100rpx;
+	width: 100rpx;
+	height: 100rpx;
+	background: linear-gradient(135deg, #FF6B95, #FF8C94);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 8rpx 20rpx rgba(255, 107, 149, 0.3);
+	z-index: 100;
+}
+
+.cart-icon {
+	font-size: 40rpx;
+	color: white;
+}
+
+.cart-badge {
+	position: absolute;
+	top: -8rpx;
+	right: -8rpx;
+	background: #FF4444;
+	color: white;
+	border-radius: 50%;
+	width: 36rpx;
+	height: 36rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 20rpx;
+	font-weight: bold;
+}
+
+/* 点餐车弹窗 */
+.cart-modal-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: flex-end;
+	z-index: 1000;
+}
+
+.cart-modal {
+	background: white;
+	border-radius: 30rpx 30rpx 0 0;
+	width: 100%;
+	max-height: 80vh;
+	display: flex;
+	flex-direction: column;
+}
+
+.cart-header {
+	padding: 30rpx;
+	border-bottom: 1rpx solid #F0F0F0;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.cart-title {
+	font-size: 32rpx;
+	font-weight: bold;
+	color: #333333;
+}
+
+.cart-header-actions {
+	display: flex;
+	align-items: center;
+	gap: 20rpx;
+}
+
+.clear-btn {
+	color: #FF6B95;
+	font-size: 28rpx;
+}
+
+.close-btn {
+	color: #999999;
+	font-size: 40rpx;
+	font-weight: bold;
+}
+
+.cart-content {
+	flex: 1;
+	padding: 0 30rpx;
+	max-height: 50vh;
+}
+
+.cart-item {
+	display: flex;
+	align-items: center;
+	padding: 20rpx 0;
+	border-bottom: 1rpx solid #F8F8F8;
+}
+
+.cart-item-image {
+	width: 100rpx;
+	height: 100rpx;
+	border-radius: 12rpx;
+	margin-right: 20rpx;
+	flex-shrink: 0;
+}
+
+.cart-item-info {
+	flex: 1;
 	margin-right: 20rpx;
 }
 
-.add-text {
+.cart-item-name {
+	display: block;
 	font-size: 28rpx;
-	font-weight: 500;
+	font-weight: bold;
+	color: #333333;
+	margin-bottom: 8rpx;
+}
+
+.cart-item-desc {
+	display: block;
+	font-size: 22rpx;
+	color: #666666;
+	margin-bottom: 8rpx;
+	line-height: 1.4;
+}
+
+.cart-item-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8rpx;
+}
+
+.cart-item-tag {
+	font-size: 18rpx;
+	color: #FF6B95;
+	background: rgba(255, 107, 149, 0.1);
+	padding: 2rpx 6rpx;
+	border-radius: 6rpx;
+}
+
+.cart-item-actions {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12rpx;
+}
+
+.quantity-controls {
+	display: flex;
+	align-items: center;
+	gap: 8rpx;
+	background: #F8F8F8;
+	border-radius: 20rpx;
+	padding: 4rpx;
+}
+
+.quantity-btn {
+	width: 36rpx;
+	height: 36rpx;
+	border-radius: 50%;
+	background: white;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 24rpx;
+	font-weight: bold;
+	color: #FF6B95;
+	box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
+}
+
+.quantity-text {
+	font-size: 24rpx;
+	font-weight: bold;
+	color: #333333;
+	min-width: 30rpx;
+	text-align: center;
+}
+
+.remove-btn {
+	background: rgba(255, 68, 68, 0.1);
+	padding: 6rpx 12rpx;
+	border-radius: 12rpx;
+}
+
+.remove-text {
+	font-size: 20rpx;
+	color: #FF4444;
+}
+
+.cart-footer {
+	padding: 30rpx;
+	border-top: 1rpx solid #F0F0F0;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.cart-summary {
+	flex: 1;
+}
+
+.total-text {
+	font-size: 28rpx;
+	color: #333333;
+	font-weight: bold;
+}
+
+.submit-btn {
+	background: linear-gradient(135deg, #FF6B95, #FF8C94);
+	padding: 20rpx 40rpx;
+	border-radius: 25rpx;
+	box-shadow: 0 4rpx 12rpx rgba(255, 107, 149, 0.3);
 }
 </style>

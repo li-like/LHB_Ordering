@@ -2,7 +2,7 @@
 	<view class="container">
 		<!-- 页面标题 -->
 		<view class="page-header">
-			<text class="page-title">家庭点餐</text>
+			<text class="page-title">家庭餐厅</text>
 			<view class="header-actions">
 				<button class="request-btn" @click="goToMyRequests">
 					<text class="request-icon">📋</text>

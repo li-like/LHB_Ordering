@@ -125,7 +125,7 @@ class FavoriteMeal(models.Model):
 class CookingRecord(models.Model):
     """下厨记录"""
     user = models.ForeignKey(WeChatUser, on_delete=models.CASCADE, verbose_name='用户')
-    family = models.ForeignKey(Family, on_delete=models.CASCADE, verbose_name='家庭')
+    family = models.ForeignKey(Family, on_delete=models.CASCADE, null=True, blank=True, verbose_name='家庭')
     meal_name = models.CharField(max_length=128, verbose_name='菜品名称')
     participants = models.JSONField(default=list, verbose_name='参与用餐人员')  # 存储用户openid列表
     rating = models.IntegerField(default=5, verbose_name='评分')  # 1-5分

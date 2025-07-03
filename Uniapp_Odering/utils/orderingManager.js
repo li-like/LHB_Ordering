@@ -2,11 +2,11 @@
  * 点餐功能API管理器
  */
 
-import { request } from './api.js'
+import { request, CONFIG } from './api.js'
 
 class OrderingManager {
 	constructor() {
-		this.baseUrl = '/api/ordering'
+		this.baseUrl = `${CONFIG.baseUrl}/api/ordering`
 	}
 
 	// ==================== 餐品分类相关 ====================
@@ -172,21 +172,21 @@ class OrderingManager {
 	 * 创建制作确认
 	 */
 	async createConfirmation(confirmationData) {
-		return await api.request(`${this.baseUrl}/confirmations/`, 'POST', confirmationData)
+		return await request(`${this.baseUrl}/confirmations/`, 'POST', confirmationData)
 	}
 	
 	/**
 	 * 开始制作
 	 */
 	async startCooking(confirmationId) {
-		return await api.request(`${this.baseUrl}/confirmations/${confirmationId}/start_cooking/`, 'POST')
+		return await request(`${this.baseUrl}/confirmations/${confirmationId}/start_cooking/`, 'POST')
 	}
 	
 	/**
 	 * 完成制作
 	 */
 	async completeCooking(confirmationId, ratings = {}) {
-		return await api.request(`${this.baseUrl}/confirmations/${confirmationId}/complete_cooking/`, 'POST', ratings)
+		return await request(`${this.baseUrl}/confirmations/${confirmationId}/complete_cooking/`, 'POST', ratings)
 	}
 
 	// ==================== 批量点餐相关 ====================
@@ -195,21 +195,21 @@ class OrderingManager {
 	 * 获取批量点餐列表
 	 */
 	async getBatches() {
-		return await api.request(`${this.baseUrl}/batches/`, 'GET')
+		return await request(`${this.baseUrl}/batches/`, 'GET')
 	}
 	
 	/**
 	 * 创建批量点餐
 	 */
 	async createBatch(batchData) {
-		return await api.request(`${this.baseUrl}/batches/`, 'POST', batchData)
+		return await request(`${this.baseUrl}/batches/`, 'POST', batchData)
 	}
 	
 	/**
 	 * 向批次添加点餐需求
 	 */
 	async addRequestsToBatch(batchId, requestIds) {
-		return await api.request(`${this.baseUrl}/batches/${batchId}/add_requests/`, 'POST', {
+		return await request(`${this.baseUrl}/batches/${batchId}/add_requests/`, 'POST', {
 			request_ids: requestIds
 		})
 	}
@@ -220,14 +220,14 @@ class OrderingManager {
 	 * 获取家庭用餐统计
 	 */
 	async getFamilyStats() {
-		return await api.request(`${this.baseUrl}/stats/`, 'GET')
+		return await request(`${this.baseUrl}/stats/`, 'GET')
 	}
 	
 	/**
 	 * 更新统计数据
 	 */
 	async updateStats(statsId) {
-		return await api.request(`${this.baseUrl}/stats/${statsId}/update_stats/`, 'POST')
+		return await request(`${this.baseUrl}/stats/${statsId}/update_stats/`, 'POST')
 	}
 
 	// ==================== 便捷方法 ====================
@@ -272,7 +272,7 @@ class OrderingManager {
 			my_requests: 'true',
 			...params
 		}
-		return await api.request(`${this.baseUrl}/requests/`, 'GET', null, requestParams)
+		return await request(`${this.baseUrl}/requests/`, 'GET', null, requestParams)
 	}
 	
 	/**
@@ -376,7 +376,7 @@ class OrderingManager {
 	 * 获取餐品统计数据（用于详情页和汇总页）
 	 */
 	async getMealStats(params = {}) {
-		return await api.request(`${this.baseUrl}/stats/meal_stats/`, 'GET', null, params)
+		return await request(`${this.baseUrl}/stats/meal_stats/`, 'GET', null, params)
 	}
 	
 	/**
@@ -402,14 +402,14 @@ class OrderingManager {
 	 * 添加/移除餐品收藏
 	 */
 	async toggleMealFavorite(mealId) {
-		return await api.request(`${this.baseUrl}/items/${mealId}/toggle_favorite/`, 'POST')
+		return await request(`${this.baseUrl}/items/${mealId}/toggle_favorite/`, 'POST')
 	}
 	
 	/**
 	 * 检查餐品是否已收藏
 	 */
 	async checkFavorite(mealId) {
-		const response = await api.request(`${this.baseUrl}/items/${mealId}/check_favorite/`, 'GET')
+		const response = await request(`${this.baseUrl}/items/${mealId}/check_favorite/`, 'GET')
 		return response.is_favorite || false
 	}
 }

@@ -124,6 +124,8 @@
 </template>
 
 <script>
+import orderingManager from '../../utils/orderingManager.js'
+
 // 确保引入了uni-popup组件
 // 如果项目中没有安装uni-popup组件，需要从插件市场安装
 export default {
@@ -266,7 +268,7 @@ export default {
 		},
 		
 		// 保存分类
-		saveCategory() {
+		async saveCategory() {
 			if (!this.validateForm()) {
 				return;
 			}
@@ -275,8 +277,24 @@ export default {
 				title: '保存中...'
 			});
 			
-			// 模拟保存操作
-			setTimeout(() => {
+			try {
+				// 准备要保存的数据
+				const categoryData = {
+					name: this.formData.name,
+					icon: this.formData.emoji || '',
+					description: this.formData.description || '',
+					family_id: 1 // 临时硬编码，后续需要从用户信息获取
+				};
+				
+				let savedCategory;
+				if (this.isEditMode) {
+					// 更新分类
+					savedCategory = await orderingManager.updateCategory(this.originalCategory.id, categoryData);
+				} else {
+					// 创建分类
+					savedCategory = await orderingManager.createCategory(categoryData);
+				}
+				
 				uni.hideLoading();
 				
 				// 返回数据给上一页
@@ -286,7 +304,10 @@ export default {
 				if (prevPage) {
 					const eventData = {
 						mode: this.isEditMode ? 'edit' : 'add',
-						data: { ...this.formData }
+						data: {
+							...this.formData,
+							id: savedCategory.id // 使用后端返回的ID
+						}
 					};
 					
 					if (this.isEditMode) {
@@ -304,7 +325,15 @@ export default {
 					title: this.isEditMode ? '修改成功' : '添加成功',
 					icon: 'success'
 				});
-			}, 1000);
+				
+			} catch (error) {
+				uni.hideLoading();
+				console.error('保存分类失败:', error);
+				uni.showToast({
+					title: '保存失败',
+					icon: 'error'
+				});
+			}
 		},
 		
 		// 验证表单
@@ -332,12 +361,15 @@ export default {
 		},
 		
 		// 执行删除
-		performDelete() {
+		async performDelete() {
 			uni.showLoading({
 				title: '删除中...'
 			});
 			
-			setTimeout(() => {
+			try {
+				// 调用后端API删除分类
+				await orderingManager.deleteCategory(this.originalCategory.id);
+				
 				uni.hideLoading();
 				
 				// 返回删除结果给上一页
@@ -356,7 +388,15 @@ export default {
 					title: '删除成功',
 					icon: 'success'
 				});
-			}, 1000);
+				
+			} catch (error) {
+				uni.hideLoading();
+				console.error('删除分类失败:', error);
+				uni.showToast({
+					title: '删除失败',
+					icon: 'error'
+				});
+			}
 		}
 	}
 }

@@ -205,6 +205,8 @@
 </template>
 
 <script>
+import orderingManager from '../../utils/orderingManager.js'
+
 export default {
 	data() {
 		return {
@@ -353,6 +355,16 @@ export default {
 			this.formData.difficulty = level;
 		},
 		
+		// 将前端难度数字转换为后端字符串
+		getDifficultyString(difficulty) {
+			const difficultyMap = {
+				1: 'easy',
+				2: 'medium', 
+				3: 'hard'
+			};
+			return difficultyMap[difficulty] || 'easy';
+		},
+		
 		// 验证表单
 		validateForm() {
 			if (!this.formData.image) {
@@ -383,21 +395,36 @@ export default {
 		},
 		
 		// 保存菜品
-		saveFoodItem() {
+		async saveFoodItem() {
 			if (!this.validateForm()) return;
 			
 			uni.showLoading({
 				title: '保存中...'
 			});
 			
-			const foodData = {
-				...this.formData,
-				id: this.editingId || Date.now(), // 简单的ID生成
-				categoryId: this.categoryId
-			};
-			
-			// 延迟模拟保存操作
-			setTimeout(() => {
+			try {
+				// 准备要保存的数据
+				const mealData = {
+					name: this.formData.name,
+					description: this.formData.description,
+					category: this.categoryId,
+					image: this.formData.image || '',
+					prep_time: this.formData.cookTime,
+					difficulty: this.getDifficultyString(this.formData.difficulty),
+					tags: this.formData.tags,
+					is_available: true,
+					nutrition_info: JSON.stringify(this.formData.nutrition)
+				};
+				
+				let savedMeal;
+				if (this.isEditMode) {
+					// 更新菜品
+					savedMeal = await orderingManager.updateMeal(this.editingId, mealData);
+				} else {
+					// 创建菜品
+					savedMeal = await orderingManager.createMeal(mealData);
+				}
+				
 				uni.hideLoading();
 				
 				// 返回数据给首页
@@ -405,6 +432,17 @@ export default {
 				const prevPage = pages[pages.length - 2];
 				
 				if (prevPage && prevPage.handleFoodUpdate) {
+					const foodData = {
+						id: savedMeal.id,
+						name: savedMeal.name,
+						description: savedMeal.description,
+						image: savedMeal.image,
+						tags: savedMeal.tags || [],
+						cookTime: savedMeal.prep_time,
+						difficulty: this.formData.difficulty,
+						categoryId: this.categoryId
+					};
+					
 					prevPage.handleFoodUpdate({
 						mode: this.isEditMode ? 'edit' : 'add',
 						categoryId: this.categoryId,
@@ -417,24 +455,35 @@ export default {
 					title: this.isEditMode ? '修改成功' : '添加成功',
 					icon: 'success'
 				});
-			}, 1000);
+				
+			} catch (error) {
+				uni.hideLoading();
+				console.error('保存菜品失败:', error);
+				uni.showToast({
+					title: '保存失败',
+					icon: 'error'
+				});
+			}
 		},
 		
 		// 删除菜品
-		deleteFood() {
+		async deleteFood() {
 			uni.showModal({
 				title: '确认删除',
 				content: `确定要删除"${this.formData.name}"吗？此操作不可撤销。`,
 				confirmText: '删除',
 				cancelText: '取消',
 				confirmColor: '#FF6B95',
-				success: (res) => {
+				success: async (res) => {
 					if (res.confirm) {
 						uni.showLoading({
 							title: '删除中...'
 						});
 						
-						setTimeout(() => {
+						try {
+							// 调用后端API删除菜品
+							await orderingManager.deleteMeal(this.editingId);
+							
 							uni.hideLoading();
 							
 							// 返回删除结果给上一页
@@ -454,7 +503,15 @@ export default {
 								title: '删除成功',
 								icon: 'success'
 							});
-						}, 1000);
+							
+						} catch (error) {
+							uni.hideLoading();
+							console.error('删除菜品失败:', error);
+							uni.showToast({
+								title: '删除失败',
+								icon: 'error'
+							});
+						}
 					}
 				}
 			});
