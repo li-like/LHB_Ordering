@@ -152,110 +152,129 @@
 			</view>
 		</view>
 		
-		<!-- 点餐车管理浮窗 -->
-		<view v-if="showCart" class="cart-modal">
-			<view class="cart-content">
-				<view class="cart-header">
-					<text class="cart-title">点餐车</text>
-					<view class="close-btn" @click="hideCartModal">
-						<text class="close-icon">✖️</text>
-					</view>
-				</view>
-				
-				<!-- 点餐车商品列表 -->
-				<view class="cart-items">
-					<view class="cart-item" v-for="item in cartItems" :key="item.id">
-						<image class="cart-item-image" :src="item.image" mode="aspectFill"></image>
-						<view class="cart-item-info">
-							<text class="cart-item-name">{{ item.name }}</text>
-							<text class="cart-item-desc">{{ item.description }}</text>
-							<view class="cart-item-tags">
-								<text class="cart-item-tag" v-for="tag in item.tags" :key="tag">{{ tag }}</text>
-							</view>
-							<view class="cart-item-footer">
-								<view class="cart-item-meta">
-									<text class="cart-cook-time">🕒 {{ item.cookTime }}分钟</text>
-									<text class="cart-difficulty">{{ getDifficultyText(item.difficulty) }}</text>
-								</view>
-								<view class="cart-item-actions">
-									<view class="quantity-control">
-										<view class="quantity-btn" @click.stop="decreaseQuantity(item)">
-											<text class="btn-text">-</text>
-										</view>
-										<text class="quantity-text">{{ item.quantity }}</text>
-										<view class="quantity-btn" @click.stop="increaseQuantity(item)">
-											<text class="btn-text">+</text>
-										</view>
-									</view>
-									<view class="remove-btn" @click.stop="removeFromCart(item)">
-										<text class="remove-text">移除</text>
-									</view>
-								</view>
-							</view>
-						</view>
-					</view>
-				</view>
-				
-				<!-- 点餐车操作区域 -->
-				<view class="cart-actions">
-					<view class="clear-cart-btn" @click="clearCart">
-						<text class="btn-text">清空点餐车</text>
-					</view>
-					<view class="submit-order-btn" @click="submitOrder">
-						<text class="btn-text">提交订单</text>
-					</view>
-				</view>
-			</view>
-		</view>
-		
 		<!-- 点餐车浮动按钮 -->
 		<view v-if="hasCartItems" class="cart-float-btn" @click="showCartModal">
 			<view class="cart-icon">🛒</view>
 			<view class="cart-badge">{{ cartItemCount }}</view>
 		</view>
-		
-		<!-- 点餐车弹窗 -->
-		<view v-if="showCart" class="cart-modal-overlay" @click="hideCartModal">
-			<view class="cart-modal" @click.stop="">
-				<view class="cart-header">
-					<text class="cart-title">我的点餐</text>
-					<view class="cart-header-actions">
-						<text class="clear-btn" @click="clearCart">清空</text>
-						<text class="close-btn" @click="hideCartModal">×</text>
-					</view>
-				</view>
-				
-				<scroll-view class="cart-content" scroll-y="true">
-					<view class="cart-item" v-for="item in cartItems" :key="item.id">
-						<image class="cart-item-image" :src="item.image" mode="aspectFill"></image>
-						<view class="cart-item-info">
-							<text class="cart-item-name">{{ item.name }}</text>
-							<text class="cart-item-desc">{{ item.description }}</text>
-							<view class="cart-item-tags">
-								<text class="cart-item-tag" v-for="tag in item.tags" :key="tag">{{ tag }}</text>
+			<!-- 点餐车弹窗 - 美化版本 -->
+			<view v-if="showCart" class="cart-modal-overlay" @click="hideCartModal">
+				<view class="cart-modal" @click.stop="">
+					<!-- 美化的头部区域 -->
+					<view class="cart-header">
+						<view class="cart-header-left">
+							<text class="cart-icon-large">🍽️</text>
+							<view class="cart-title-group">
+								<text class="cart-title">我的点餐</text>
+								<text class="cart-subtitle">{{ cartItemCount }}个美味等着您</text>
 							</view>
 						</view>
-						<view class="cart-item-actions">
-							<view class="quantity-controls">
-								<view class="quantity-btn" @click="decreaseQuantity(item)">-</view>
-								<text class="quantity-text">{{ item.quantity }}</text>
-								<view class="quantity-btn" @click="increaseQuantity(item)">+</view>
+						<view class="cart-header-actions">
+							<view class="action-btn clear-btn" @click="clearCart" v-if="hasCartItems">
+								<text class="action-icon">🗑️</text>
+								<text class="action-text">清空</text>
 							</view>
-							<view class="remove-btn" @click="removeFromCart(item)">
-								<text class="remove-text">移除</text>
+							<view class="close-btn" @click="hideCartModal">
+								<text class="close-icon">×</text>
 							</view>
 						</view>
 					</view>
-				</scroll-view>
-				
-				<view class="cart-footer">
-					<view class="cart-summary">
-						<text class="total-text">共 {{ cartItemCount }} 个商品</text>
+					<!-- 商品列表区域 -->
+					<scroll-view class="cart-content" scroll-y="true">
+						<!-- 空状态 -->
+						<view v-if="cartItems.length === 0" class="cart-empty">
+							<view class="empty-icon-wrapper">
+								<text class="empty-icon">🛒</text>
+								<view class="empty-sparkles">✨</view>
+							</view>
+							<text class="empty-text">点餐车是空的</text>
+							<text class="empty-desc">快去选择您喜欢的美食吧</text>
+							<view class="empty-action" @click="hideCartModal">
+								<text class="empty-action-text">去点餐</text>
+								<text class="empty-action-arrow">→</text>
+							</view>
+						</view>
+						
+						<!-- 商品列表 -->
+						<view v-else class="cart-items-list">
+							<view class="cart-item" v-for="item in cartItems" :key="item.id">
+								<!-- 商品图片和数量徽章 -->
+								<view class="item-image-wrapper">
+									<image class="item-image" :src="item.image || '/static/food-decoration.png'" mode="aspectFill"></image>
+									<view class="item-quantity-badge">{{ item.quantity }}</view>
+								</view>
+								
+								<!-- 商品详细信息 -->
+								<view class="item-content">
+									<view class="item-main-info">
+										<text class="item-name">{{ item.name }}</text>
+										<view class="item-tags" v-if="item.tags && item.tags.length > 0">
+											<text class="item-tag" v-for="tag in item.tags.slice(0, 3)" :key="tag">{{ tag }}</text>
+										</view>
+									</view>
+									
+									<view class="item-meta-info">
+										<view class="meta-item">
+											<text class="meta-icon">⏱️</text>
+											<text class="meta-text">{{ item.cookTime || 30 }}分钟</text>
+										</view>
+										<view class="meta-item">
+											<text class="meta-icon">⭐</text>
+											<text class="meta-text">{{ getDifficultyText(item.difficulty) }}</text>
+										</view>
+									</view>
+									
+									<text class="item-desc">{{ item.description || '暂无描述' }}</text>
+								</view>
+								
+								<!-- 操作区域 -->
+								<view class="item-actions">
+									<view class="quantity-controls">
+										<view class="quantity-btn decrease" @click="decreaseQuantity(item)">
+											<text class="btn-icon">−</text>
+										</view>
+										<text class="quantity-display">{{ item.quantity }}</text>
+										<view class="quantity-btn increase" @click="increaseQuantity(item)">
+											<text class="btn-icon">＋</text>
+										</view>
+									</view>
+									<view class="remove-btn" @click="removeFromCart(item)">
+										<text class="remove-icon">🗑️</text>
+									</view>
+								</view>
+							</view>
+						</view>
+					</scroll-view>
+					<!-- 美化的底部操作区域 -->
+					<view class="cart-footer" v-if="cartItems.length > 0">
+						<!-- 小贴士区域 -->
+						<view class="cart-tips">
+							<text class="tips-icon">💡</text>
+							<text class="tips-text">{{ getCurrentTip() }}</text>
+						</view>
+						
+						<view class="cart-summary">
+							<view class="summary-row main">
+								<text class="summary-label">商品数量</text>
+								<text class="summary-value">{{ cartItemCount }} 个</text>
+							</view>
+							<view class="summary-row">
+								<text class="summary-label">预计用时</text>
+								<text class="summary-value">{{ estimatedTime }} 分钟</text>
+							</view>
+							<view class="summary-row">
+								<text class="summary-label">烹饪难度</text>
+								<text class="summary-value">{{ overallDifficulty }}</text>
+							</view>
+						</view>
+						<view class="submit-area">
+							<view class="submit-btn" @click="submitOrder">
+								<text class="submit-icon">🍽️</text>
+								<text class="submit-text">提交订单</text>
+								<text class="submit-arrow">→</text>
+							</view>
+						</view>
 					</view>
-					<view class="submit-btn" @click="submitOrder">
-						<text class="submit-text">提交订单</text>
-					</view>
-				</view>
 			</view>
 		</view>
 	</view>
@@ -304,7 +323,15 @@ export default {
 			// 点餐车相关数据
 			cartItems: [], // 点餐车商品列表
 			showCart: false, // 是否显示点餐车浮窗
-			cartTotal: 0 // 点餐车总价（如果有价格的话）
+			cartTotal: 0, // 点餐车总价（如果有价格的话）
+			// 小贴士列表
+			tips: [
+				"点击食物可以查看详情和添加到点餐车",
+				"家庭成员可以一起在线点餐",
+				"长按商品可以快速添加到点餐车",
+				"可以在'家庭餐厅'中查看所有成员的点餐",
+				"左右滑动可以浏览不同分类的食物"
+			]
 		}
 	},
 	
@@ -346,6 +373,34 @@ export default {
 		// 点餐车是否有商品
 		hasCartItems() {
 			return this.cartItems.length > 0;
+		},
+		
+		// 预计总用时
+		estimatedTime() {
+			if (!this.hasCartItems) return 0;
+			// 取最长的烹饪时间作为预计用时
+			return Math.max(...this.cartItems.map(item => item.cookTime || 30));
+		},
+		
+		// 整体烹饪难度
+		overallDifficulty() {
+			if (!this.hasCartItems) return '简单';
+			
+			// 计算平均难度
+			const difficulties = this.cartItems.map(item => {
+				switch (item.difficulty) {
+					case 'easy': return 1;
+					case 'medium': return 2;
+					case 'hard': return 3;
+					default: return 1;
+				}
+			});
+			
+			const avgDifficulty = difficulties.reduce((sum, val) => sum + val, 0) / difficulties.length;
+			
+			if (avgDifficulty <= 1.3) return '简单';
+			if (avgDifficulty <= 2.3) return '中等';
+			return '困难';
 		}
 	},
 	
@@ -979,14 +1034,15 @@ export default {
 		clearCart() {
 			uni.showModal({
 				title: '确认清空',
-				content: '确定要清空点餐车吗？',
+				content: `确定要清空点餐车中的 ${this.cartItemCount} 个商品吗？`,
 				success: (res) => {
 					if (res.confirm) {
 						this.cartItems = [];
 						this.saveCartToStorage();
 						uni.showToast({
 							title: '已清空点餐车',
-							icon: 'success'
+							icon: 'success',
+							duration: 2000
 						});
 					}
 				}
@@ -998,27 +1054,52 @@ export default {
 			if (!this.hasCartItems) {
 				uni.showToast({
 					title: '点餐车为空',
-					icon: 'none'
+					icon: 'none',
+					duration: 2000
 				});
 				return;
 			}
 			
-			// 这里可以跳转到订单确认页面或直接提交
+			// 显示确认对话框
 			uni.showModal({
-				title: '提交订单',
-				content: `确定要提交包含${this.cartItemCount}个商品的订单吗？`,
-				success: (res) => {
+				title: '确认提交',
+				content: `将提交 ${this.cartItemCount} 个商品的订单，预计用时 ${this.estimatedTime} 分钟`,
+				success: async (res) => {
 					if (res.confirm) {
-						// TODO: 实现后端提交逻辑
-						uni.showToast({
-							title: '订单提交成功',
-							icon: 'success'
+						// 显示加载提示
+						uni.showLoading({
+							title: '正在提交...',
+							mask: true
 						});
 						
-						// 提交成功后清空点餐车
-						this.cartItems = [];
-						this.saveCartToStorage();
-						this.hideCartModal();
+						try {
+							// 模拟提交订单的过程
+							// 这里可以调用后端API提交订单
+							await new Promise(resolve => setTimeout(resolve, 1500));
+							
+							// 提交成功
+							uni.hideLoading();
+							uni.showToast({
+								title: '订单提交成功！',
+								icon: 'success',
+								duration: 2000
+							});
+							
+							// 清空购物车
+							this.clearCart();
+							
+							// 关闭弹窗
+							this.hideCartModal();
+							
+						} catch (error) {
+							uni.hideLoading();
+							uni.showToast({
+								title: '提交失败，请重试',
+								icon: 'none',
+								duration: 2000
+							});
+							console.error('提交订单失败:', error);
+						}
 					}
 				}
 			});
@@ -1044,6 +1125,13 @@ export default {
 				console.error('加载点餐车数据失败:', e);
 				this.cartItems = [];
 			}
+		},
+		
+		// 获取随机提示信息
+		getCurrentTip() {
+			if (!this.tips || this.tips.length === 0) return "欢迎使用家庭点餐系统";
+			const randomIndex = Math.floor(Math.random() * this.tips.length);
+			return this.tips[randomIndex];
 		},
 	}
 }
@@ -1516,118 +1604,300 @@ export default {
 	color: #FF6B95;
 }
 
-/* 点餐车管理浮窗样式 */
-.cart-modal {
+/* 点餐车弹窗 - 美化版本 */
+.cart-modal-overlay {
 	position: fixed;
 	top: 0;
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background: rgba(0, 0, 0, 0.7);
+	background: rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(8rpx);
 	display: flex;
-	align-items: center;
-	justify-content: center;
+	align-items: flex-end;
 	z-index: 1000;
+	animation: fadeIn 0.3s ease-out;
 }
 
-.cart-content {
-	width: 90%;
-	max-width: 600rpx;
-	background: #FFFFFF;
-	border-radius: 20rpx;
-	overflow: hidden;
-	box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.2);
+@keyframes fadeIn {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+.cart-modal {
+	background: linear-gradient(135deg, #FFFFFF, #FAFBFC);
+	border-radius: 30rpx 30rpx 0 0;
+	width: 100%;
+	max-height: 85vh;
+	display: flex;
+	flex-direction: column;
+	box-shadow: 0 -10rpx 30rpx rgba(0, 0, 0, 0.15);
+	animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+	from { transform: translateY(100%); }
+	to { transform: translateY(0); }
+}
+
+/* 美化的头部区域 */
+.cart-header {
+	background: linear-gradient(135deg, #FF6B95, #FF8FB3);
+	padding: 30rpx;
+	border-radius: 30rpx 30rpx 0 0;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	position: relative;
+}
+
+.cart-header::after {
+	content: '';
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 1rpx;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+}
+
+.cart-header-left {
+	display: flex;
+	align-items: center;
+	gap: 20rpx;
+}
+
+.cart-icon-large {
+	font-size: 24rpx;
+	padding: 16rpx;
+	background: rgba(255, 255, 255, 0.2);
+	border-radius: 50%;
+	backdrop-filter: blur(10rpx);
+}
+
+.cart-title-group {
 	display: flex;
 	flex-direction: column;
 }
 
-.cart-header {
-	padding: 20rpx;
-	background: linear-gradient(135deg, #FF6B95, #FFB6C1);
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-}
-
 .cart-title {
-	font-size: 28rpx;
+	font-size: 32rpx;
 	font-weight: bold;
 	color: #FFFFFF;
+	text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
+}
+
+.cart-subtitle {
+	font-size: 24rpx;
+	color: rgba(255, 255, 255, 0.9);
+	margin-top: 4rpx;
+}
+
+.cart-header-actions {
+	display: flex;
+	align-items: center;
+	gap: 16rpx;
+}
+
+.action-btn {
+	display: flex;
+	align-items: center;
+	gap: 8rpx;
+	background: rgba(255, 255, 255, 0.2);
+	padding: 12rpx 16rpx;
+	border-radius: 20rpx;
+	backdrop-filter: blur(10rpx);
+}
+
+.action-icon {
+	font-size: 20rpx;
+}
+
+.action-text {
+	font-size: 22rpx;
+	color: #FFFFFF;
+	font-weight: 500;
 }
 
 .close-btn {
-	width: 40rpx;
-	height: 40rpx;
+	width: 48rpx;
+	height: 48rpx;
 	border-radius: 50%;
 	background: rgba(255, 255, 255, 0.2);
+	backdrop-filter: blur(10rpx);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 }
 
 .close-icon {
-	font-size: 24rpx;
+	font-size: 32rpx;
 	color: #FFFFFF;
+	font-weight: bold;
 }
 
-/* 点餐车商品列表 */
-.cart-items {
-	flex: 1;
-	padding: 20rpx;
-	overflow-y: auto;
+/* 商品列表区域 */
+.cart-content {
+  flex: 1;
+  padding: 20rpx 30rpx;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* 优化移动端滚动体验 */
+}
+
+.cart-empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 80rpx 30rpx;
+	text-align: center;
+}
+
+.empty-icon {
+	font-size: 80rpx;
+	margin-bottom: 20rpx;
+	opacity: 0.3;
+}
+
+.empty-text {
+	font-size: 28rpx;
+	color: #666666;
+	font-weight: 500;
+	margin-bottom: 12rpx;
+}
+
+.empty-desc {
+	font-size: 24rpx;
+	color: #999999;
+}
+
+.cart-items-list {
+	display: flex;
+	flex-direction: column;
+	gap: 4rpx;
 }
 
 .cart-item {
+	background: #FFFFFF;
+	border-radius: 20rpx;
+	padding: 4rpx;
 	display: flex;
-	background: #F8F9FA;
-	border-radius: 16rpx;
-	margin-bottom: 16rpx;
+	align-items: center;
+	box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+	border: 1rpx solid rgba(255, 107, 149, 0.1);
+	position: relative;
 	overflow: hidden;
-	border: 1rpx solid #E9ECEF;
 }
 
-.cart-item-image {
-	width: 120rpx;
-	height: 120rpx;
+.cart-item::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 6rpx;
+	height: 100%;
+	background: linear-gradient(135deg, #FF6B95, #FF8FB3);
+}
+
+/* 商品图片和数量徽章 */
+.item-image-wrapper {
+	position: relative;
+	margin-right: 20rpx;
 	flex-shrink: 0;
 }
 
-.cart-item-info {
-	flex: 1;
-	padding: 16rpx;
-	display: flex;
-	flex-direction: column;
+.item-image {
+	width: 100rpx;
+	height: 100rpx;
+	border-radius: 16rpx;
+	box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
 }
 
-.cart-item-name {
-	font-size: 26rpx;
-	font-weight: 500;
-	color: #333333;
+.item-quantity-badge {
+	position: absolute;
+	top: -8rpx;
+	right: -8rpx;
+	background: linear-gradient(135deg, #FF6B95, #FF8FB3);
+	color: white;
+	border-radius: 50%;
+	width: 32rpx;
+	height: 32rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 20rpx;
+	font-weight: bold;
+	box-shadow: 0 2rpx 8rpx rgba(255, 107, 149, 0.4);
+}
+
+/* 商品详细信息 */
+.item-content {
+	flex: 1;
+	margin-right: 20rpx;
+}
+
+.item-main-info {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
 	margin-bottom: 8rpx;
 }
 
-.cart-item-desc {
-	font-size: 22rpx;
-	color: #666666;
-	margin-bottom: 12rpx;
-	line-height: 1.4;
+.item-name {
+	font-size: 28rpx;
+	font-weight: bold;
+	color: #333333;
+	flex: 1;
+	margin-right: 12rpx;
 }
 
-.cart-item-tags {
-	margin-bottom: 12rpx;
+.item-tags {
+	display: flex;
+	gap: 6rpx;
+	flex-wrap: wrap;
 }
 
-.cart-item-tag {
-	display: inline-block;
-	font-size: 20rpx;
+.item-tag {
+	font-size: 18rpx;
 	color: #FF6B95;
-	background: rgba(255, 107, 149, 0.1);
+	background: linear-gradient(135deg, rgba(255, 107, 149, 0.1), rgba(255, 143, 179, 0.1));
 	padding: 4rpx 8rpx;
 	border-radius: 8rpx;
-	margin-right: 8rpx;
+	border: 1rpx solid rgba(255, 107, 149, 0.2);
 }
 
-.cart-item-actions {
+.item-meta-info {
+	display: flex;
+	gap: 20rpx;
+	margin-bottom: 8rpx;
+}
+
+.meta-item {
+	display: flex;
+	align-items: center;
+	gap: 4rpx;
+}
+
+.meta-icon {
+	font-size: 20rpx;
+}
+
+.meta-text {
+	font-size: 22rpx;
+	color: #666666;
+}
+
+.item-desc {
+	font-size: 22rpx;
+	color: #999999;
+	line-height: 1.4;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* 操作区域 */
+.item-actions {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -1637,68 +1907,661 @@ export default {
 .quantity-controls {
 	display: flex;
 	align-items: center;
-	gap: 8rpx;
-	background: #F8F8F8;
-	border-radius: 20rpx;
-	padding: 4rpx;
+	background: linear-gradient(135deg, #F8F9FA, #FFFFFF);
+	border-radius: 25rpx;
+	padding: 6rpx;
+	box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+	border: 1rpx solid #E9ECEF;
 }
 
 .quantity-btn {
-	width: 36rpx;
-	height: 36rpx;
+	width: 40rpx;
+	height: 40rpx;
 	border-radius: 50%;
-	background: white;
+	background: linear-gradient(135deg, #FF6B95, #FF8FB3);
+	color: white;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 24rpx;
 	font-weight: bold;
-	color: #FF6B95;
-	box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
+	box-shadow: 0 2rpx 8rpx rgba(255, 107, 149, 0.3);
+	transition: all 0.2s ease;
 }
 
-.quantity-text {
+.quantity-btn.decrease {
+	background: linear-gradient(135deg, #6C757D, #8E9BA7);
+	box-shadow: 0 2rpx 8rpx rgba(108, 117, 125, 0.3);
+}
+
+.quantity-btn:active {
+	transform: scale(0.95);
+}
+
+.btn-icon {
+	font-size: 24rpx;
+	color: white;
+}
+
+.quantity-display {
 	font-size: 24rpx;
 	font-weight: bold;
 	color: #333333;
-	min-width: 30rpx;
+	min-width: 40rpx;
 	text-align: center;
+	margin: 0 8rpx;
 }
 
 .remove-btn {
-	background: rgba(255, 68, 68, 0.1);
-	padding: 6rpx 12rpx;
-	border-radius: 12rpx;
+	background: linear-gradient(135deg, rgba(255, 68, 68, 0.1), rgba(255, 99, 99, 0.1));
+	border: 1rpx solid rgba(255, 68, 68, 0.2);
+	padding: 8rpx 12rpx;
+	border-radius: 16rpx;
+	transition: all 0.2s ease;
 }
 
-.remove-text {
+.remove-btn:active {
+	transform: scale(0.95);
+}
+
+.remove-icon {
 	font-size: 20rpx;
-	color: #FF4444;
 }
 
+/* 美化的底部操作区域 */
 .cart-footer {
+	background: linear-gradient(135deg, #FAFBFC, #FFFFFF);
 	padding: 30rpx;
-	border-top: 1rpx solid #F0F0F0;
+	border-top: 1rpx solid rgba(255, 107, 149, 0.1);
+	display: flex;
+	flex-direction: column;
+	gap: 20rpx;
+}
+
+.cart-summary {
+	display: flex;
+	flex-direction: column;
+	gap: 12rpx;
+}
+
+.summary-row {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 }
 
-.cart-summary {
-	flex: 1;
+.summary-row.main {
+	padding-bottom: 12rpx;
+	border-bottom: 1rpx solid rgba(255, 107, 149, 0.1);
 }
 
-.total-text {
-	font-size: 28rpx;
+.summary-label {
+	font-size: 26rpx;
+	color: #666666;
+}
+
+.summary-row.main .summary-label {
+	font-weight: 500;
 	color: #333333;
+}
+
+.summary-value {
+	font-size: 26rpx;
 	font-weight: bold;
+	color: #FF6B95;
+}
+
+.summary-row.main .summary-value {
+	font-size: 28rpx;
+}
+
+.submit-area {
+	display: flex;
+	justify-content: center;
 }
 
 .submit-btn {
-	background: linear-gradient(135deg, #FF6B95, #FF8C94);
+	background: linear-gradient(135deg, #FF6B95, #FF8FB3);
 	padding: 20rpx 40rpx;
+	border-radius: 30rpx;
+	display: flex;
+	align-items: center;
+	gap: 12rpx;
+	box-shadow: 0 8rpx 25rpx rgba(255, 107, 149, 0.4);
+	transition: all 0.3s ease;
+	flex: 1;
+	justify-content: center;
+	max-width: 300rpx;
+}
+
+.submit-btn:active {
+	transform: translateY(2rpx);
+	box-shadow: 0 4rpx 15rpx rgba(255, 107, 149, 0.3);
+}
+
+.submit-icon {
+	font-size: 24rpx;
+}
+
+.submit-text {
+	color: white;
+	font-size: 28rpx;
+	font-weight: bold;
+	text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.1);
+}
+
+.submit-arrow {
+	font-size: 24rpx;
+	color: white;
+	font-weight: bold;
+}
+
+/* 购物车弹窗相关样式 */
+.cart-modal-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: flex-end;
+	z-index: 1000;
+	animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+.cart-modal {
+	background: white;
+	border-radius: 30rpx 30rpx 0 0;
+	width: 100%;
+	max-height: 80vh;
+	display: flex;
+	flex-direction: column;
+	animation: slideUp 0.3s ease;
+	box-shadow: 0 -10rpx 30rpx rgba(0, 0, 0, 0.1);
+}
+
+@keyframes slideUp {
+	from {
+		transform: translateY(100%);
+	}
+	to {
+		transform: translateY(0);
+	}
+}
+
+/* 购物车头部 */
+.cart-header {
+	padding: 30rpx;
+	border-bottom: 1rpx solid rgba(255, 107, 149, 0.1);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	background: linear-gradient(135deg, #FAFBFC, #FFFFFF);
+}
+
+.cart-header-left {
+	display: flex;
+	align-items: center;
+	gap: 20rpx;
+}
+
+.cart-icon-large {
+	font-size: 48rpx;
+	padding: 12rpx;
+	background: linear-gradient(135deg, rgba(255, 107, 149, 0.1), rgba(255, 143, 179, 0.1));
+	border-radius: 20rpx;
+	border: 2rpx solid rgba(255, 107, 149, 0.2);
+}
+
+.cart-title-group {
+	display: flex;
+	flex-direction: column;
+	gap: 4rpx;
+}
+
+.cart-title {
+	font-size: 32rpx;
+	font-weight: bold;
+	color: #333333;
+}
+
+.cart-subtitle {
+	font-size: 24rpx;
+	color: #666666;
+	opacity: 0.8;
+}
+
+.cart-header-actions {
+	display: flex;
+	align-items: center;
+	gap: 20rpx;
+}
+
+.action-btn {
+	display: flex;
+	align-items: center;
+	gap: 8rpx;
+	padding: 12rpx 20rpx;
+	border-radius: 20rpx;
+	transition: all 0.2s ease;
+}
+
+.clear-btn {
+	background: linear-gradient(135deg, rgba(255, 68, 68, 0.1), rgba(255, 99, 99, 0.1));
+	border: 1rpx solid rgba(255, 68, 68, 0.2);
+}
+
+.clear-btn:active {
+	transform: scale(0.95);
+}
+
+.action-icon {
+	font-size: 20rpx;
+}
+
+.action-text {
+	color: #FF4444;
+	font-size: 24rpx;
+	font-weight: 500;
+}
+
+.close-btn {
+	width: 50rpx;
+	height: 50rpx;
+	border-radius: 50%;
+	background: rgba(153, 153, 153, 0.1);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.2s ease;
+}
+
+.close-btn:active {
+	transform: scale(0.9);
+	background: rgba(153, 153, 153, 0.2);
+}
+
+.close-icon {
+	font-size: 32rpx;
+	color: #999999;
+	font-weight: bold;
+}
+
+/* 购物车内容区域 */
+.cart-content {
+	flex: 1;
+	padding: 0 30rpx;
+	max-height: 50vh;
+}
+
+/* 空状态样式 */
+.cart-empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 100rpx 40rpx;
+	text-align: center;
+}
+
+.empty-icon-wrapper {
+	position: relative;
+	margin-bottom: 30rpx;
+}
+
+.empty-icon {
+	font-size: 100rpx;
+	color: #E9ECEF;
+	display: block;
+}
+
+.empty-sparkles {
+	position: absolute;
+	top: -20rpx;
+	right: -20rpx;
+	font-size: 30rpx;
+	color: #FFD700;
+	animation: sparkle 2s infinite;
+}
+
+@keyframes sparkle {
+	0%, 100% {
+		opacity: 0.3;
+		transform: scale(0.8);
+	}
+	50% {
+		opacity: 1;
+		transform: scale(1.2);
+	}
+}
+
+.empty-text {
+	font-size: 32rpx;
+	color: #666666;
+	font-weight: 500;
+	margin-bottom: 12rpx;
+}
+
+.empty-desc {
+	font-size: 24rpx;
+	color: #999999;
+	line-height: 1.4;
+	margin-bottom: 40rpx;
+}
+
+.empty-action {
+	display: flex;
+	align-items: center;
+	gap: 8rpx;
+	padding: 16rpx 32rpx;
+	background: linear-gradient(135deg, #FF6B95, #FF8FB3);
 	border-radius: 25rpx;
-	box-shadow: 0 4rpx 12rpx rgba(255, 107, 149, 0.3);
+	box-shadow: 0 6rpx 20rpx rgba(255, 107, 149, 0.3);
+	transition: all 0.2s ease;
+}
+
+.empty-action:active {
+	transform: scale(0.95);
+}
+
+.empty-action-text {
+	color: white;
+	font-size: 26rpx;
+	font-weight: 500;
+}
+
+.empty-action-arrow {
+	color: white;
+	font-size: 24rpx;
+	font-weight: bold;
+}
+
+/* 购物车商品列表 */
+.cart-items-list {
+	padding: 20rpx 0;
+}
+
+.cart-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15rpx; /* 减小间距 */
+    padding: 20rpx 15rpx; /* 调整内边距 */
+    border-bottom: 1rpx solid #F8F9FA;
+    position: relative;
+    width: 95%;
+    box-sizing: border-box; /* 确保padding不会增加宽度 */
+}
+
+.cart-item:last-child {
+	border-bottom: none;
+}
+
+/* 修改图片容器的尺寸 */
+.item-image-wrapper {
+    position: relative;
+    flex-shrink: 0;
+    width: 100rpx; /* 减小宽度 */
+}
+
+.item-image {
+    width: 100%;
+    height: 100rpx; /* 保持宽高比 */
+    border-radius: 12rpx;
+    object-fit: cover;
+}
+
+.item-quantity-badge {
+	position: absolute;
+	top: -8rpx;
+	right: -8rpx;
+	background: linear-gradient(135deg, #FF6B95, #FF8FB3);
+	color: white;
+	border-radius: 50%;
+	width: 32rpx;
+	height: 32rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 20rpx;
+	font-weight: bold;
+	box-shadow: 0 4rpx 12rpx rgba(255, 107, 149, 0.4);
+	border: 2rpx solid white;
+}
+
+/* 商品内容区域 */
+.item-content {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 12rpx;
+}
+
+.item-main-info {
+	display: flex;
+	flex-direction: column;
+	gap: 8rpx;
+}
+
+.item-name {
+	font-size: 28rpx;
+	font-weight: bold;
+	color: #333333;
+	line-height: 1.3;
+}
+
+.item-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8rpx;
+}
+
+.item-tag {
+	font-size: 20rpx;
+	color: #FF6B95;
+	background: rgba(255, 107, 149, 0.1);
+	padding: 4rpx 10rpx;
+	border-radius: 12rpx;
+	border: 1rpx solid rgba(255, 107, 149, 0.2);
+}
+
+.item-meta-info {
+	display: flex;
+	gap: 16rpx;
+}
+
+.meta-item {
+	display: flex;
+	align-items: center;
+	gap: 4rpx;
+}
+
+.meta-icon {
+	font-size: 20rpx;
+}
+
+.meta-text {
+	font-size: 22rpx;
+	color: #666666;
+}
+
+.item-desc {
+	font-size: 22rpx;
+	color: #999999;
+	line-height: 1.4;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	-webkit-box-orient: vertical;
+}
+
+/* 操作区域 */
+.item-actions {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12rpx;
+}
+
+.quantity-controls {
+	display: flex;
+	align-items: center;
+	background: linear-gradient(135deg, #F8F9FA, #FFFFFF);
+	border-radius: 25rpx;
+	padding: 6rpx;
+	box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+	border: 1rpx solid #E9ECEF;
+}
+
+.quantity-btn {
+	width: 40rpx;
+	height: 40rpx;
+	border-radius: 50%;
+	background: linear-gradient(135deg, #FF6B95, #FF8FB3);
+	color: white;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: bold;
+	box-shadow: 0 2rpx 8rpx rgba(255, 107, 149, 0.3);
+	transition: all 0.2s ease;
+}
+
+.quantity-btn.decrease {
+	background: linear-gradient(135deg, #6C757D, #8E9BA7);
+	box-shadow: 0 2rpx 8rpx rgba(108, 117, 125, 0.3);
+}
+
+.quantity-btn:active {
+	transform: scale(0.95);
+}
+
+.btn-icon {
+	font-size: 24rpx;
+	color: white;
+}
+
+.quantity-display {
+	font-size: 24rpx;
+	font-weight: bold;
+	color: #333333;
+	min-width: 40rpx;
+	text-align: center;
+	margin: 0 8rpx;
+}
+
+.remove-btn {
+	background: linear-gradient(135deg, rgba(255, 68, 68, 0.1), rgba(255, 99, 99, 0.1));
+	border: 1rpx solid rgba(255, 68, 68, 0.2);
+	padding: 8rpx 12rpx;
+	border-radius: 16rpx;
+	transition: all 0.2s ease;
+}
+
+.remove-btn:active {
+	transform: scale(0.95);
+}
+
+.remove-icon {
+	font-size: 20rpx;
+}
+
+/* 美化的底部操作区域 */
+.cart-footer {
+	background: linear-gradient(135deg, #FAFBFC, #FFFFFF);
+	padding: 30rpx;
+	border-top: 1rpx solid rgba(255, 107, 149, 0.1);
+	display: flex;
+	flex-direction: column;
+	gap: 20rpx;
+}
+
+.cart-summary {
+	display: flex;
+	flex-direction: column;
+	gap: 12rpx;
+}
+
+.summary-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.summary-row.main {
+	padding-bottom: 12rpx;
+	border-bottom: 1rpx solid rgba(255, 107, 149, 0.1);
+}
+
+.summary-label {
+	font-size: 26rpx;
+	color: #666666;
+}
+
+.summary-row.main .summary-label {
+	font-weight: 500;
+	color: #333333;
+}
+
+.summary-value {
+	font-size: 26rpx;
+	font-weight: bold;
+	color: #FF6B95;
+}
+
+.summary-row.main .summary-value {
+	font-size: 28rpx;
+}
+
+.submit-area {
+	display: flex;
+	justify-content: center;
+}
+
+.submit-btn {
+	background: linear-gradient(135deg, #FF6B95, #FF8FB3);
+	padding: 20rpx 40rpx;
+	border-radius: 30rpx;
+	display: flex;
+	align-items: center;
+	gap: 12rpx;
+	box-shadow: 0 8rpx 25rpx rgba(255, 107, 149, 0.4);
+	transition: all 0.3s ease;
+	flex: 1;
+	justify-content: center;
+	max-width: 300rpx;
+}
+
+.submit-btn:active {
+	transform: translateY(2rpx);
+	box-shadow: 0 4rpx 15rpx rgba(255, 107, 149, 0.3);
+}
+
+.submit-icon {
+	font-size: 24rpx;
+}
+
+.submit-text {
+	color: white;
+	font-size: 28rpx;
+	font-weight: bold;
+	text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.1);
+}
+
+.submit-arrow {
+	font-size: 24rpx;
+	color: white;
+	font-weight: bold;
 }
 
 /* 点餐车浮动按钮 */
@@ -1715,6 +2578,11 @@ export default {
 	justify-content: center;
 	box-shadow: 0 8rpx 20rpx rgba(255, 107, 149, 0.3);
 	z-index: 100;
+	transition: all 0.3s ease;
+}
+
+.cart-float-btn:active {
+	transform: scale(0.9);
 }
 
 .cart-icon {
@@ -1726,7 +2594,7 @@ export default {
 	position: absolute;
 	top: -8rpx;
 	right: -8rpx;
-	background: #FF4444;
+	background: linear-gradient(135deg, #FF4444, #FF6666);
 	color: white;
 	border-radius: 50%;
 	width: 36rpx;
@@ -1736,188 +2604,20 @@ export default {
 	justify-content: center;
 	font-size: 20rpx;
 	font-weight: bold;
+	box-shadow: 0 4rpx 12rpx rgba(255, 68, 68, 0.4);
+	border: 2rpx solid white;
+	animation: bounce 2s infinite;
 }
 
-/* 点餐车弹窗 */
-.cart-modal-overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: rgba(0, 0, 0, 0.5);
-	display: flex;
-	align-items: flex-end;
-	z-index: 1000;
-}
-
-.cart-modal {
-	background: white;
-	border-radius: 30rpx 30rpx 0 0;
-	width: 100%;
-	max-height: 80vh;
-	display: flex;
-	flex-direction: column;
-}
-
-.cart-header {
-	padding: 30rpx;
-	border-bottom: 1rpx solid #F0F0F0;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-}
-
-.cart-title {
-	font-size: 32rpx;
-	font-weight: bold;
-	color: #333333;
-}
-
-.cart-header-actions {
-	display: flex;
-	align-items: center;
-	gap: 20rpx;
-}
-
-.clear-btn {
-	color: #FF6B95;
-	font-size: 28rpx;
-}
-
-.close-btn {
-	color: #999999;
-	font-size: 40rpx;
-	font-weight: bold;
-}
-
-.cart-content {
-	flex: 1;
-	padding: 0 30rpx;
-	max-height: 50vh;
-}
-
-.cart-item {
-	display: flex;
-	align-items: center;
-	padding: 20rpx 0;
-	border-bottom: 1rpx solid #F8F8F8;
-}
-
-.cart-item-image {
-	width: 100rpx;
-	height: 100rpx;
-	border-radius: 12rpx;
-	margin-right: 20rpx;
-	flex-shrink: 0;
-}
-
-.cart-item-info {
-	flex: 1;
-	margin-right: 20rpx;
-}
-
-.cart-item-name {
-	display: block;
-	font-size: 28rpx;
-	font-weight: bold;
-	color: #333333;
-	margin-bottom: 8rpx;
-}
-
-.cart-item-desc {
-	display: block;
-	font-size: 22rpx;
-	color: #666666;
-	margin-bottom: 8rpx;
-	line-height: 1.4;
-}
-
-.cart-item-tags {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 8rpx;
-}
-
-.cart-item-tag {
-	font-size: 18rpx;
-	color: #FF6B95;
-	background: rgba(255, 107, 149, 0.1);
-	padding: 2rpx 6rpx;
-	border-radius: 6rpx;
-}
-
-.cart-item-actions {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 12rpx;
-}
-
-.quantity-controls {
-	display: flex;
-	align-items: center;
-	gap: 8rpx;
-	background: #F8F8F8;
-	border-radius: 20rpx;
-	padding: 4rpx;
-}
-
-.quantity-btn {
-	width: 36rpx;
-	height: 36rpx;
-	border-radius: 50%;
-	background: white;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 24rpx;
-	font-weight: bold;
-	color: #FF6B95;
-	box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
-}
-
-.quantity-text {
-	font-size: 24rpx;
-	font-weight: bold;
-	color: #333333;
-	min-width: 30rpx;
-	text-align: center;
-}
-
-.remove-btn {
-	background: rgba(255, 68, 68, 0.1);
-	padding: 6rpx 12rpx;
-	border-radius: 12rpx;
-}
-
-.remove-text {
-	font-size: 20rpx;
-	color: #FF4444;
-}
-
-.cart-footer {
-	padding: 30rpx;
-	border-top: 1rpx solid #F0F0F0;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-}
-
-.cart-summary {
-	flex: 1;
-}
-
-.total-text {
-	font-size: 28rpx;
-	color: #333333;
-	font-weight: bold;
-}
-
-.submit-btn {
-	background: linear-gradient(135deg, #FF6B95, #FF8C94);
-	padding: 20rpx 40rpx;
-	border-radius: 25rpx;
-	box-shadow: 0 4rpx 12rpx rgba(255, 107, 149, 0.3);
+@keyframes bounce {
+	0%, 20%, 50%, 80%, 100% {
+		transform: translateY(0);
+	}
+	40% {
+		transform: translateY(-6rpx);
+	}
+	60% {
+		transform: translateY(-3rpx);
+	}
 }
 </style>
