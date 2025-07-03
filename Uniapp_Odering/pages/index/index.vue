@@ -638,16 +638,11 @@ export default {
 			// 这个方法已经不需要了，被selectFoodCategory替代
 		},
 		
-		// 跳转到点餐页面（现在主页就是点餐页面，显示点餐车）
+		// 跳转到家庭餐厅页面
 		goToOrdering() {
-			if (this.hasCartItems) {
-				this.showCartModal();
-			} else {
-				uni.showToast({
-					title: '请先选择要点的菜品',
-					icon: 'none'
-				});
-			}
+			uni.navigateTo({
+				url: '/pages/ordering/index'
+			});
 		},
 		
 		// === 管理员功能 ===
