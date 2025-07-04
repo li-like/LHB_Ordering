@@ -18,13 +18,7 @@
 		
 		<!-- 快速操作区域 -->
 		<view class="quick-actions">
-			<view class="action-item" @click="goToOrdering">
-				<view class="action-icon ordering-icon">
-					<text class="icon-text">🍽️</text>
-				</view>
-				<text class="action-label">家庭餐厅</text>
-				<text class="action-desc">查看点餐</text>
-			</view>
+
 			
 			<view class="action-item" @click="randomOrder">
 				<view class="action-icon random-icon">

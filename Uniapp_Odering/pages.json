@@ -210,10 +210,10 @@
 				"text": "点餐"
 			},
 			{
-				"pagePath": "pages/family/family",
-				"iconPath": "/static/tabs/family.png",
-				"selectedIconPath": "/static/tabs/family-active.png",
-				"text": "家庭"
+				"pagePath": "pages/ordering/index",
+				"iconPath": "/static/tabs/ordering.png",
+				"selectedIconPath": "/static/tabs/ordering-active.png",
+				"text": "订单"
 			},
 			{
 				"pagePath": "pages/profile/profile",
