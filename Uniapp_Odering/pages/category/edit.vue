@@ -154,10 +154,16 @@ export default {
 	},
 	
 	onLoad(options) {
-		if (options.mode === 'edit' && options.categoryData) {
+		if (options.mode === 'edit') {
 			this.isEditMode = true;
-			this.originalCategory = JSON.parse(decodeURIComponent(options.categoryData));
-			this.formData = { ...this.originalCategory };
+			if (options.categoryData) {
+				// 兼容旧的传递数据方式
+				this.originalCategory = JSON.parse(decodeURIComponent(options.categoryData));
+				this.formData = { ...this.originalCategory };
+			} else if (options.id) {
+				// 新的方式：通过ID从后端获取数据
+				this.loadCategoryData(options.id);
+			}
 			this.tempSelectedEmoji = this.formData.emoji; // 初始化临时选中的emoji
 		} else {
 			// 新建模式，初始化临时选中的emoji为默认值
@@ -169,6 +175,37 @@ export default {
 	},
 	
 	methods: {
+		// 从后端加载分类数据
+		async loadCategoryData(categoryId) {
+			try {
+				uni.showLoading({
+					title: '加载中...'
+				});
+				
+				const category = await orderingManager.getCategory(categoryId);
+				
+				this.originalCategory = {
+					id: category.id,
+					name: category.name || '',
+					emoji: category.icon || '🍽️',
+					iconType: 'emoji',
+					image: category.image || ''
+				};
+				
+				this.formData = { ...this.originalCategory };
+				this.tempSelectedEmoji = this.formData.emoji;
+				
+				uni.hideLoading();
+			} catch (error) {
+				console.error('加载分类数据失败:', error);
+				uni.hideLoading();
+				uni.showToast({
+					title: '加载失败',
+					icon: 'error'
+				});
+			}
+		},
+		
 		// 返回上一页
 		goBack() {
 			if (this.hasChanges()) {

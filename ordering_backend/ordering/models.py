@@ -173,13 +173,20 @@ class MealOrderBatch(models.Model):
     target_time = models.DateTimeField(verbose_name='目标用餐时间')
     coordinator = models.ForeignKey(WeChatUser, on_delete=models.CASCADE, related_name='coordinated_batches', verbose_name='协调人')
     status = models.CharField(max_length=20, choices=[
-        ('planning', '规划中'),
+        ('pending', '待处理'),
         ('confirmed', '已确认'),
         ('cooking', '制作中'),
         ('completed', '已完成'),
         ('cancelled', '已取消'),
-    ], default='planning', verbose_name='批次状态')
+    ], default='pending', verbose_name='批次状态')
     notes = models.TextField(blank=True, verbose_name='批次备注')
+    meal_type = models.CharField(max_length=20, choices=[
+        ('breakfast', '早餐'),
+        ('lunch', '午餐'),
+        ('dinner', '晚餐'),
+        ('snack', '零食'),
+        ('dessert', '甜品'),
+    ], verbose_name='餐点类型')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
 

@@ -42,6 +42,7 @@ class UserManager {
 				...userInfo, // 保留本地的loginTime等字段
 				...res,      // 覆盖后端的最新数据
 				openid: userInfo.openid, // 确保openid不被覆盖
+				userId: userInfo.userId, // 确保userId不被覆盖
 				loginTime: userInfo.loginTime // 保持原有登录时间
 			};
 			

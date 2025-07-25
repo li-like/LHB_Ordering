@@ -2,9 +2,15 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.views import APIView
 from django.db.models import Q
 from django.utils import timezone
 from datetime import timedelta
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.conf import settings
+import os
+import uuid
 
 from .models import (
     MealCategory, MealItem, MealRequest, 
@@ -15,7 +21,7 @@ from .serializers import (
     MealConfirmationSerializer, MealOrderBatchSerializer, FamilyMealStatsSerializer,
     MealCategorySimpleSerializer, MealItemSimpleSerializer, MealRequestSimpleSerializer
 )
-from wechat_auth.models import Family, FamilyMembership
+from wechat_auth.models import Family, FamilyMembership, WeChatUser
 
 class MealCategoryViewSet(viewsets.ModelViewSet):
     """餐品分类管理"""
@@ -108,17 +114,43 @@ class MealItemViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """创建餐品时设置创建者和家庭"""
         family_id = self.request.data.get('family_id')
-        if not family_id:
-            membership = FamilyMembership.objects.filter(
-                user=self.request.user, is_active=True
-            ).first()
-            if membership:
-                family_id = membership.family.id
         
-        serializer.save(
-            created_by=self.request.user,
-            family_id=family_id
-        )
+        # 处理匿名用户的情况
+        if self.request.user.is_anonymous:
+            # 临时处理：使用默认值
+            try:
+                # 获取第一个分类的family作为默认值
+                category_id = self.request.data.get('category')
+                if category_id:
+                    category = MealCategory.objects.get(id=category_id)
+                    family_id = category.family.id
+                    created_by = category.created_by  # 使用分类创建者作为创建者
+                else:
+                    # 使用第一个可用的family和用户
+                    family = Family.objects.first()
+                    created_by = WeChatUser.objects.first()
+                    family_id = family.id if family else None
+                    
+                serializer.save(
+                    created_by=created_by,
+                    family_id=family_id
+                )
+            except Exception as e:
+                print(f"创建餐品失败: {e}")
+                raise
+        else:
+            # 正常用户处理
+            if not family_id:
+                membership = FamilyMembership.objects.filter(
+                    user=self.request.user, is_active=True
+                ).first()
+                if membership:
+                    family_id = membership.family.id
+            
+            serializer.save(
+                created_by=self.request.user,
+                family_id=family_id
+            )
 
     @action(detail=False, methods=['get'])
     def popular(self, request):
@@ -163,6 +195,7 @@ class MealRequestViewSet(viewsets.ModelViewSet):
         requester_filter = self.request.query_params.get('requester')
         date_filter = self.request.query_params.get('date')
         my_requests = self.request.query_params.get('my_requests')
+        meal_type_filter = self.request.query_params.get('meal_type')
         
         if status_filter:
             queryset = queryset.filter(status=status_filter)
@@ -172,12 +205,15 @@ class MealRequestViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(created_at__date=date_filter)
         if my_requests == 'true' and not user.is_anonymous:
             queryset = queryset.filter(requester=user)
+        if meal_type_filter:
+            queryset = queryset.filter(meal_type=meal_type_filter)
         
         return queryset.order_by('-created_at')
 
     def perform_create(self, serializer):
         """创建点餐需求时设置请求者和家庭"""
         family_id = self.request.data.get('family_id', 1)  # 临时默认为1
+        meal_type = self.request.data.get('meal_type', 'breakfast')  # 默认早餐
         
         # 临时处理：如果是匿名用户，使用默认用户
         if self.request.user.is_anonymous:
@@ -191,7 +227,7 @@ class MealRequestViewSet(viewsets.ModelViewSet):
                     avatar_url='',
                     is_test_user=True
                 )
-            serializer.save(requester=default_user, family_id=family_id)
+            serializer.save(requester=default_user, family_id=family_id, meal_type=meal_type)
         else:
             if not family_id:
                 membership = FamilyMembership.objects.filter(
@@ -308,7 +344,7 @@ class MealConfirmationViewSet(viewsets.ModelViewSet):
 class MealOrderBatchViewSet(viewsets.ModelViewSet):
     """批量点餐管理"""
     serializer_class = MealOrderBatchSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         """获取用户相关的批量点餐"""
@@ -356,7 +392,7 @@ class MealOrderBatchViewSet(viewsets.ModelViewSet):
 class FamilyMealStatsViewSet(viewsets.ReadOnlyModelViewSet):
     """家庭用餐统计（只读）"""
     serializer_class = FamilyMealStatsSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         """获取用户家庭的统计数据"""
@@ -375,3 +411,53 @@ class FamilyMealStatsViewSet(viewsets.ReadOnlyModelViewSet):
         
         serializer = self.get_serializer(stats)
         return Response(serializer.data)
+
+
+class MealImageUploadView(APIView):
+    """菜品图片上传视图"""
+    permission_classes = [AllowAny]  # 临时允许匿名访问用于测试
+    
+    def post(self, request):
+        if 'image' not in request.FILES:
+            return Response({'error': '请选择图片文件'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        image_file = request.FILES['image']
+        
+        # 验证文件类型
+        allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+        if image_file.content_type not in allowed_types:
+            return Response({'error': '仅支持 JPG、PNG、GIF、WebP 格式的图片'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 验证文件大小 (10MB 限制)
+        if image_file.size > 10 * 1024 * 1024:
+            return Response({'error': '图片文件不能超过10MB'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # 生成唯一文件名
+            file_extension = os.path.splitext(image_file.name)[1]
+            unique_filename = f"meals/{uuid.uuid4().hex}{file_extension}"
+            
+            # 确保目录存在
+            meals_dir = os.path.join(settings.MEDIA_ROOT, 'meals')
+            os.makedirs(meals_dir, exist_ok=True)
+            
+            # 保存文件
+            file_path = default_storage.save(unique_filename, ContentFile(image_file.read()))
+            
+            # 构建完整的URL
+            base_url = "http://192.168.189.240:8000"  # 开发环境URL
+            image_url = f"{base_url}/media/{file_path}"
+            
+            # 打印调试信息
+            print(f"菜品图片保存路径: {file_path}")
+            print(f"菜品图片URL: {image_url}")
+            
+            return Response({
+                'success': True,
+                'message': '图片上传成功',
+                'image_url': image_url
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            print(f"菜品图片上传失败: {str(e)}")
+            return Response({'error': f'上传失败: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

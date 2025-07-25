@@ -90,7 +90,7 @@ class FamilyMembership:
 
 ### 后端API地址
 ```
-基础URL: http://192.168.10.4:8000/api/wechat/
+基础URL: http://192.168.189.240:8000/api/wechat/
 ```
 
 ### 前端API封装

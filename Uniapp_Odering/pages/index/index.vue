@@ -3,7 +3,8 @@
 		<!-- 顶部用户信息栏 -->
 		<view class="header">
 			<view class="user-info">
-				<image class="avatar" :src="userInfo.avatarUrl || '../../static/default-avatar.png'" mode="aspectFill"></image>
+				<image class="avatar" :src="userInfo.avatarUrl || '../../static/default-avatar.png'" mode="aspectFill">
+				</image>
 				<view class="greeting">
 					<text class="welcome">你好，{{ userInfo.nickName || '家庭用户' }}</text>
 					<text class="time-text">{{ greeting }}</text>
@@ -15,11 +16,11 @@
 				<text class="arrow">></text>
 			</view>
 		</view>
-		
+
 		<!-- 快速操作区域 -->
 		<view class="quick-actions">
 
-			
+
 			<view class="action-item" @click="randomOrder">
 				<view class="action-icon random-icon">
 					<text class="icon-text">🎲</text>
@@ -27,7 +28,7 @@
 				<text class="action-label">随便来点</text>
 				<text class="action-desc">不知道吃什么</text>
 			</view>
-			
+
 			<view class="action-item" @click="goToRecipes">
 				<view class="action-icon recipe-icon">
 					<text class="icon-text">📖</text>
@@ -35,7 +36,7 @@
 				<text class="action-label">菜谱大全</text>
 				<text class="action-desc">记录做菜</text>
 			</view>
-			
+
 			<view class="action-item" @click="goToHistory">
 				<view class="action-icon history-icon">
 					<text class="icon-text">📊</text>
@@ -44,10 +45,11 @@
 				<text class="action-desc">查看偏好</text>
 			</view>
 		</view>
-		
+
 		<!-- 今日推荐轮播 -->
 		<view class="recommendation-banner">
-			<swiper class="swiper" circular="true" autoplay="true" interval="3000" duration="500" indicator-dots="true" indicator-color="rgba(255,255,255,0.5)" indicator-active-color="#FF6B95">
+			<swiper class="swiper" circular="true" autoplay="true" interval="3000" duration="500" indicator-dots="true"
+				indicator-color="rgba(255,255,255,0.5)" indicator-active-color="#FF6B95">
 				<swiper-item v-for="(item, index) in recommendations" :key="index" @click="selectDish(item)">
 					<view class="banner-item">
 						<image class="banner-image" :src="item.image" mode="aspectFill"></image>
@@ -59,7 +61,7 @@
 				</swiper-item>
 			</swiper>
 		</view>
-		
+
 		<!-- 点餐区域 -->
 		<view class="ordering-section">
 			<view class="section-header">
@@ -75,37 +77,34 @@
 					</view>
 				</view>
 			</view>
-			
+
 			<view class="ordering-container">
 				<!-- 左侧分类列表 -->
 				<scroll-view class="category-sidebar" scroll-y="true">
-					<view 
-						class="category-tab" 
-						:class="{ 'active': activeCategory === category.id }" 
-						v-for="category in foodCategories" 
-						:key="category.id"
-						@click="selectFoodCategory(category.id)"
-						@longpress="isAdmin ? manageCategoryOptions(category) : null"
-					>
+					<view class="category-tab" :class="{ 'active': activeCategory === category.id }"
+						v-for="category in foodCategories" :key="category.id" @click="selectFoodCategory(category.id)"
+						@longpress="isAdmin ? manageCategoryOptions(category) : null">
 						<text class="category-icon">{{ category.emoji }}</text>
 						<text class="category-name">{{ category.name }}</text>
 						<text class="item-count">({{ category.items.length }})</text>
 						<!-- 管理员：分类管理小图标 -->
-						<view v-if="isAdmin && activeCategory === category.id" class="category-manage" @click.stop="manageCategoryOptions(category)">
+						<view v-if="isAdmin && activeCategory === category.id" class="category-manage"
+							@click.stop="manageCategoryOptions(category)">
 							<text class="manage-icon">⚙️</text>
 						</view>
 					</view>
-					
+
 					<!-- 管理员：添加新分类按钮 -->
 					<view v-if="isAdmin" class="add-category-btn" @click="addNewCategory">
 						<view class="add-icon-small">+</view>
 						<text class="add-text-small">新分类</text>
 					</view>
 				</scroll-view>
-				
+
 				<!-- 右侧商品列表 -->
 				<scroll-view class="food-list" scroll-y="true">
-					<view class="food-item" v-for="item in currentCategoryItems" :key="item.id" @click="selectFoodItem(item)">
+					<view class="food-item" v-for="item in currentCategoryItems" :key="item.id"
+						@click="selectFoodItem(item)">
 						<image class="food-image" :src="item.image" mode="aspectFill"></image>
 						<view class="food-info">
 							<text class="food-name">{{ item.name }}</text>
@@ -136,7 +135,7 @@
 							</view>
 						</view>
 					</view>
-					
+
 					<!-- 管理员：添加新菜品按钮 -->
 					<view v-if="isAdmin" class="add-food-btn" @click="addNewFoodItem">
 						<view class="add-icon">+</view>
@@ -145,130 +144,132 @@
 				</scroll-view>
 			</view>
 		</view>
-		
+
 		<!-- 点餐车浮动按钮 -->
 		<view v-if="hasCartItems" class="cart-float-btn" @click="showCartModal">
 			<view class="cart-icon">🛒</view>
 			<view class="cart-badge">{{ cartItemCount }}</view>
 		</view>
-			<!-- 点餐车弹窗 - 美化版本 -->
-			<view v-if="showCart" class="cart-modal-overlay" @click="hideCartModal">
-				<view class="cart-modal" @click.stop="">
-					<!-- 美化的头部区域 -->
-					<view class="cart-header">
-						<view class="cart-header-left">
-							<text class="cart-icon-large">🍽️</text>
-							<view class="cart-title-group">
-								<text class="cart-title">我的点餐</text>
-								<text class="cart-subtitle">{{ cartItemCount }}个美味等着您</text>
-							</view>
+		<!-- 点餐车弹窗 - 美化版本 -->
+		<view v-if="showCart" class="cart-modal-overlay" @click="hideCartModal">
+			<view class="cart-modal" @click.stop="">
+				<!-- 美化的头部区域 -->
+				<view class="cart-header">
+					<view class="cart-header-left">
+						<text class="cart-icon-large">🍽️</text>
+						<view class="cart-title-group">
+							<text class="cart-title">我的点餐</text>
+							<text class="cart-subtitle">{{ cartItemCount }}个美味等着您</text>
 						</view>
-						<view class="cart-header-actions">
-							<view class="action-btn clear-btn" @click="clearCart" v-if="hasCartItems">
-								<text class="action-icon">🗑️</text>
-								<text class="action-text">清空</text>
+					</view>
+					<view class="cart-header-actions">
+						<view class="action-btn clear-btn" @click="clearCart" v-if="hasCartItems">
+							<text class="action-icon">🗑️</text>
+							<text class="action-text">清空</text>
+						</view>
+						<view class="close-btn" @click="hideCartModal">
+							<text class="close-icon">×</text>
+						</view>
+					</view>
+				</view>
+				<!-- 商品列表区域 -->
+				<scroll-view class="cart-content" scroll-y="true">
+					<!-- 空状态 -->
+					<view v-if="cartItems.length === 0" class="cart-empty">
+						<view class="empty-icon-wrapper">
+							<text class="empty-icon">🛒</text>
+							<view class="empty-sparkles">✨</view>
+						</view>
+						<text class="empty-text">点餐车是空的</text>
+						<text class="empty-desc">快去选择您喜欢的美食吧</text>
+						<view class="empty-action" @click="hideCartModal">
+							<text class="empty-action-text">去点餐</text>
+							<text class="empty-action-arrow">→</text>
+						</view>
+					</view>
+
+					<!-- 商品列表 -->
+					<view v-else class="cart-items-list">
+						<view class="cart-item" v-for="item in cartItems" :key="item.id">
+							<!-- 商品图片和数量徽章 -->
+							<view class="item-image-wrapper">
+								<image class="item-image" :src="item.image || '/static/food-decoration.png'"
+									mode="aspectFill"></image>
+								<view class="item-quantity-badge">{{ item.quantity }}</view>
 							</view>
-							<view class="close-btn" @click="hideCartModal">
-								<text class="close-icon">×</text>
+
+							<!-- 商品详细信息 -->
+							<view class="item-content">
+								<view class="item-main-info">
+									<text class="item-name">{{ item.name }}</text>
+									<view class="item-tags" v-if="item.tags && item.tags.length > 0">
+										<text class="item-tag" v-for="tag in item.tags.slice(0, 3)" :key="tag">{{ tag
+											}}</text>
+									</view>
+								</view>
+
+								<view class="item-meta-info">
+									<view class="meta-item">
+										<text class="meta-icon">⏱️</text>
+										<text class="meta-text">{{ item.cookTime || 30 }}分钟</text>
+									</view>
+									<view class="meta-item">
+										<text class="meta-icon">⭐</text>
+										<text class="meta-text">{{ getDifficultyText(item.difficulty) }}</text>
+									</view>
+								</view>
+
+								<text class="item-desc">{{ item.description || '暂无描述' }}</text>
+							</view>
+
+							<!-- 操作区域 -->
+							<view class="item-actions">
+								<view class="quantity-controls">
+									<view class="quantity-btn decrease" @click="decreaseQuantity(item)">
+										<text class="btn-icon">−</text>
+									</view>
+									<text class="quantity-display">{{ item.quantity }}</text>
+									<view class="quantity-btn increase" @click="increaseQuantity(item)">
+										<text class="btn-icon">＋</text>
+									</view>
+								</view>
+								<view class="remove-btn" @click="removeFromCart(item)">
+									<text class="remove-icon">🗑️</text>
+								</view>
 							</view>
 						</view>
 					</view>
-					<!-- 商品列表区域 -->
-					<scroll-view class="cart-content" scroll-y="true">
-						<!-- 空状态 -->
-						<view v-if="cartItems.length === 0" class="cart-empty">
-							<view class="empty-icon-wrapper">
-								<text class="empty-icon">🛒</text>
-								<view class="empty-sparkles">✨</view>
-							</view>
-							<text class="empty-text">点餐车是空的</text>
-							<text class="empty-desc">快去选择您喜欢的美食吧</text>
-							<view class="empty-action" @click="hideCartModal">
-								<text class="empty-action-text">去点餐</text>
-								<text class="empty-action-arrow">→</text>
-							</view>
+				</scroll-view>
+				<!-- 美化的底部操作区域 -->
+				<view class="cart-footer" v-if="cartItems.length > 0">
+					<!-- 小贴士区域 -->
+					<view class="cart-tips">
+						<text class="tips-icon">💡</text>
+						<text class="tips-text">{{ getCurrentTip() }}</text>
+					</view>
+
+					<view class="cart-summary">
+						<view class="summary-row main">
+							<text class="summary-label">商品数量</text>
+							<text class="summary-value">{{ cartItemCount }} 个</text>
 						</view>
-						
-						<!-- 商品列表 -->
-						<view v-else class="cart-items-list">
-							<view class="cart-item" v-for="item in cartItems" :key="item.id">
-								<!-- 商品图片和数量徽章 -->
-								<view class="item-image-wrapper">
-									<image class="item-image" :src="item.image || '/static/food-decoration.png'" mode="aspectFill"></image>
-									<view class="item-quantity-badge">{{ item.quantity }}</view>
-								</view>
-								
-								<!-- 商品详细信息 -->
-								<view class="item-content">
-									<view class="item-main-info">
-										<text class="item-name">{{ item.name }}</text>
-										<view class="item-tags" v-if="item.tags && item.tags.length > 0">
-											<text class="item-tag" v-for="tag in item.tags.slice(0, 3)" :key="tag">{{ tag }}</text>
-										</view>
-									</view>
-									
-									<view class="item-meta-info">
-										<view class="meta-item">
-											<text class="meta-icon">⏱️</text>
-											<text class="meta-text">{{ item.cookTime || 30 }}分钟</text>
-										</view>
-										<view class="meta-item">
-											<text class="meta-icon">⭐</text>
-											<text class="meta-text">{{ getDifficultyText(item.difficulty) }}</text>
-										</view>
-									</view>
-									
-									<text class="item-desc">{{ item.description || '暂无描述' }}</text>
-								</view>
-								
-								<!-- 操作区域 -->
-								<view class="item-actions">
-									<view class="quantity-controls">
-										<view class="quantity-btn decrease" @click="decreaseQuantity(item)">
-											<text class="btn-icon">−</text>
-										</view>
-										<text class="quantity-display">{{ item.quantity }}</text>
-										<view class="quantity-btn increase" @click="increaseQuantity(item)">
-											<text class="btn-icon">＋</text>
-										</view>
-									</view>
-									<view class="remove-btn" @click="removeFromCart(item)">
-										<text class="remove-icon">🗑️</text>
-									</view>
-								</view>
-							</view>
+						<view class="summary-row">
+							<text class="summary-label">预计用时</text>
+							<text class="summary-value">{{ estimatedTime }} 分钟</text>
 						</view>
-					</scroll-view>
-					<!-- 美化的底部操作区域 -->
-					<view class="cart-footer" v-if="cartItems.length > 0">
-						<!-- 小贴士区域 -->
-						<view class="cart-tips">
-							<text class="tips-icon">💡</text>
-							<text class="tips-text">{{ getCurrentTip() }}</text>
-						</view>
-						
-						<view class="cart-summary">
-							<view class="summary-row main">
-								<text class="summary-label">商品数量</text>
-								<text class="summary-value">{{ cartItemCount }} 个</text>
-							</view>
-							<view class="summary-row">
-								<text class="summary-label">预计用时</text>
-								<text class="summary-value">{{ estimatedTime }} 分钟</text>
-							</view>
-							<view class="summary-row">
-								<text class="summary-label">烹饪难度</text>
-								<text class="summary-value">{{ overallDifficulty }}</text>
-							</view>
-						</view>
-						<view class="submit-area">
-							<view class="submit-btn" @click="submitOrder">
-								<text class="submit-icon">🍽️</text>
-								<text class="submit-text">提交订单</text>
-								<text class="submit-arrow">→</text>
-							</view>
+						<view class="summary-row">
+							<text class="summary-label">烹饪难度</text>
+							<text class="summary-value">{{ overallDifficulty }}</text>
 						</view>
 					</view>
+					<view class="submit-area">
+						<view class="submit-btn" @click="submitOrder">
+							<text class="submit-icon">🍽️</text>
+							<text class="submit-text">提交订单</text>
+							<text class="submit-arrow">→</text>
+						</view>
+					</view>
+				</view>
 			</view>
 		</view>
 	</view>
@@ -313,7 +314,7 @@ export default {
 			],
 			// 食物分类及对应商品（初始为空，从后端加载）
 			foodCategories: [],
-			
+
 			// 点餐车相关数据
 			cartItems: [], // 点餐车商品列表
 			showCart: false, // 是否显示点餐车浮窗
@@ -328,58 +329,58 @@ export default {
 			]
 		}
 	},
-	
+
 	computed: {
 		// 当前选中分类的商品列表
 		currentCategoryItems() {
 			if (!this.activeCategory) {
 				return [];
 			}
-			
+
 			const category = this.foodCategories.find(cat => cat.id === this.activeCategory);
 			return category ? (category.items || []) : [];
 		},
-		
+
 		// 判断是否为管理员（基于用户角色或家庭权限）
 		isAdmin() {
 			// 临时逻辑：检查用户是否为家庭创建者或管理员
 			// 后续可以根据实际的权限系统调整
-			return this.familyData.role === 'admin' || 
-				   this.familyData.role === 'creator' || 
-				   this.userInfo.role === 'admin' ||
-				   this.userInfo.isAdmin === true;
+			return this.familyData.role === 'admin' ||
+				this.familyData.role === 'creator' ||
+				this.userInfo.role === 'admin' ||
+				this.userInfo.isAdmin === true;
 		},
-		
+
 		// 判断是否有管理员权限切换功能（仅限超级管理员或开发者）
 		canToggleAdminMode() {
 			// 只有特定权限的用户才能切换管理员模式
 			// 这里可以设置为开发者模式或特定用户
-			return this.userInfo.isDeveloper === true || 
-				   this.userInfo.role === 'super_admin' ||
-				   this.familyData.role === 'creator'; // 家庭创建者可以切换
+			return this.userInfo.isDeveloper === true ||
+				this.userInfo.role === 'super_admin' ||
+				this.familyData.role === 'creator'; // 家庭创建者可以切换
 		},
-		
+
 		// 点餐车商品数量
 		cartItemCount() {
 			return this.cartItems.reduce((total, item) => total + item.quantity, 0);
 		},
-		
+
 		// 点餐车是否有商品
 		hasCartItems() {
 			return this.cartItems.length > 0;
 		},
-		
+
 		// 预计总用时
 		estimatedTime() {
 			if (!this.hasCartItems) return 0;
 			// 取最长的烹饪时间作为预计用时
 			return Math.max(...this.cartItems.map(item => item.cookTime || 30));
 		},
-		
+
 		// 整体烹饪难度
 		overallDifficulty() {
 			if (!this.hasCartItems) return '简单';
-			
+
 			// 计算平均难度
 			const difficulties = this.cartItems.map(item => {
 				switch (item.difficulty) {
@@ -389,48 +390,48 @@ export default {
 					default: return 1;
 				}
 			});
-			
+
 			const avgDifficulty = difficulties.reduce((sum, val) => sum + val, 0) / difficulties.length;
-			
+
 			if (avgDifficulty <= 1.3) return '简单';
 			if (avgDifficulty <= 2.3) return '中等';
 			return '困难';
 		}
 	},
-	
+
 	onLoad() {
 		// 获取用户信息
 		this.userInfo = userManager.getUserInfo();
-		
+
 		// 获取家庭信息
 		this.familyData = this.userInfo.family || {};
-		
+
 		// 设置问候语
 		this.setGreeting();
-		
+
 		// 从后端加载分类和菜品数据
 		this.loadBackendData();
-		
+
 		// 加载点餐车数据
 		this.loadCartFromStorage();
 	},
-	
+
 	onShow() {
 		this.checkLogin(); // 每次显示时都检查登录状态
 		this.loadUserData();
 		this.updateActiveTime(); // 更新用户活跃时间
-		
+
 		// 确保每次返回页面时都恢复管理员模式状态
-		this.restoreAdminMode();
+		// this.restoreAdminMode();
 	},
-	
+
 	onUnload() {
 		// 移除用户信息更新监听
 		if (this.userInfoUpdateHandler) {
 			userManager.offUserInfoUpdated(this.userInfoUpdateHandler);
 		}
 	},
-	
+
 	methods: {
 		// 检查登录状态
 		async checkLogin() {
@@ -441,7 +442,7 @@ export default {
 				});
 				return;
 			}
-			
+
 			// #ifdef MP-WEIXIN
 			// 检查微信session状态
 			try {
@@ -464,7 +465,7 @@ export default {
 			}
 			// #endif
 		},
-		
+
 		// 加载用户数据
 		async loadUserData() {
 			try {
@@ -481,29 +482,34 @@ export default {
 				// 降级使用本地数据
 				this.userInfo = userManager.getUserInfo() || {};
 			}
-			
-			// 加载家庭数据，如果没有role则设置默认值
+
+			// 加载家庭数据，但保留当前的 role 状态
+			const currentRole = this.familyData?.role; // 保存当前的角色状态
 			this.familyData = userManager.getFamilyData() || {};
-			if (!this.familyData.role) {
+			
+			// 如果之前有设置过角色，保持不变；否则设置默认值
+			if (currentRole) {
+				this.familyData.role = currentRole; // 保持当前状态
+			} else if (!this.familyData.role) {
 				this.familyData.role = 'member'; // 默认为普通成员
 			}
-			
+
 			// 临时：为了测试设置开发者权限（后续删除）
 			// 这里可以根据实际需求设置特定用户为开发者
 			if (!this.userInfo.isDeveloper) {
 				this.userInfo.isDeveloper = true; // 临时设置为开发者，便于测试
 			}
-			
+
 			// 注意：分类数据在onLoad中通过loadBackendData()加载，这里不需要单独加载
 		},
-		
+
 		// 更新用户活跃时间
 		updateActiveTime() {
 			if (userManager.isLoggedIn()) {
 				userManager.updateActiveTime();
 			}
 		},
-		
+
 		// 设置问候语
 		setGreeting() {
 			const hour = new Date().getHours();
@@ -523,7 +529,7 @@ export default {
 				this.greeting = '夜宵时间，要不要来点';
 			}
 		},
-		
+
 		// 随机点餐
 		randomOrder() {
 			uni.showModal({
@@ -532,14 +538,14 @@ export default {
 				showCancel: false
 			});
 		},
-		
+
 		// 跳转到菜谱页面
 		goToRecipes() {
 			uni.navigateTo({
 				url: '/pages/recipe/index'
 			});
 		},
-		
+
 		// 跳转到饮食记录
 		goToHistory() {
 			uni.showModal({
@@ -548,19 +554,19 @@ export default {
 				showCancel: false
 			});
 		},
-		
+
 		// 跳转到家庭管理
 		goToFamily() {
 			uni.switchTab({
 				url: '/pages/family/family'
 			});
 		},
-		
+
 		// 选择分类
 		selectFoodCategory(categoryId) {
 			this.activeCategory = categoryId;
 		},
-		
+
 		// 选择商品
 		selectFoodItem(item) {
 			// 跳转到菜品详情页面
@@ -569,12 +575,12 @@ export default {
 				url: `/pages/food/detail?data=${itemData}`
 			});
 		},
-		
+
 		// 添加到点餐车
 		addToOrder(item) {
 			// 检查商品是否已在点餐车中
 			const existingItemIndex = this.cartItems.findIndex(cartItem => cartItem.id === item.id);
-			
+
 			if (existingItemIndex !== -1) {
 				// 如果已存在，增加数量
 				this.cartItems[existingItemIndex].quantity += 1;
@@ -586,27 +592,27 @@ export default {
 					addTime: new Date().getTime() // 添加时间戳
 				});
 			}
-			
+
 			uni.showToast({
 				title: `已添加${item.name}到点餐车`,
 				icon: 'success',
 				duration: 1500
 			});
-			
+
 			// 保存到本地存储
 			this.saveCartToStorage();
 		},
-		
+
 		// 获取难度文本
 		getDifficultyText(difficulty) {
 			const difficultyMap = {
 				1: '⭐ 简单',
-				2: '⭐⭐ 中等', 
+				2: '⭐⭐ 中等',
 				3: '⭐⭐⭐ 困难'
 			};
 			return difficultyMap[difficulty] || '⭐ 简单';
 		},
-		
+
 		// 选择菜品（轮播图点击）
 		selectDish(dish) {
 			// 找到对应的详细商品信息
@@ -615,7 +621,7 @@ export default {
 				foundItem = category.items.find(item => item.name === dish.name);
 				if (foundItem) break;
 			}
-			
+
 			if (foundItem) {
 				this.selectFoodItem(foundItem);
 			} else {
@@ -626,21 +632,21 @@ export default {
 				});
 			}
 		},
-		
+
 		// 选择分类（删除原来的方法）
 		selectCategory(category) {
 			// 这个方法已经不需要了，被selectFoodCategory替代
 		},
-		
+
 		// 跳转到家庭餐厅页面
 		goToOrdering() {
 			uni.navigateTo({
 				url: '/pages/ordering/index'
 			});
 		},
-		
+
 		// === 管理员功能 ===
-		
+
 		// 编辑菜品
 		editFoodItem(item) {
 			// 跳转到菜品编辑页面
@@ -648,7 +654,7 @@ export default {
 				url: `/pages/food/edit?id=${item.id}&categoryId=${this.activeCategory}&mode=edit`
 			});
 		},
-		
+
 		// 删除菜品
 		deleteFoodItem(item) {
 			uni.showModal({
@@ -664,13 +670,13 @@ export default {
 				}
 			});
 		},
-		
+
 		// 执行删除菜品
 		async performDeleteFood(item) {
 			try {
 				// 调用后端API删除菜品
 				await orderingManager.deleteMeal(item.id);
-				
+
 				// 删除成功后，从本地数据中移除
 				const categoryIndex = this.foodCategories.findIndex(cat => cat.id === this.activeCategory);
 				if (categoryIndex !== -1) {
@@ -679,7 +685,7 @@ export default {
 						this.foodCategories[categoryIndex].items.splice(itemIndex, 1);
 					}
 				}
-				
+
 				uni.showToast({
 					title: '删除成功',
 					icon: 'success'
@@ -692,7 +698,7 @@ export default {
 				});
 			}
 		},
-		
+
 		// 添加新菜品
 		addNewFoodItem() {
 			// 跳转到菜品添加页面
@@ -700,7 +706,7 @@ export default {
 				url: `/pages/food/edit?categoryId=${this.activeCategory}&mode=add`
 			});
 		},
-		
+
 		// 管理分类选项
 		manageCategoryOptions(category) {
 			uni.showActionSheet({
@@ -714,15 +720,15 @@ export default {
 				}
 			});
 		},
-		
+
 		// 编辑分类（更新为跳转到分类编辑页面）
 		editCategory(category) {
-			// 跳转到分类编辑页面
+			// 跳转到分类编辑页面，使用ID方式以支持从后端加载数据
 			uni.navigateTo({
-				url: `/pages/category/edit?mode=edit&categoryData=${encodeURIComponent(JSON.stringify(category))}`
+				url: `/pages/category/edit?mode=edit&id=${category.id}`
 			});
 		},
-		
+
 		// 删除分类
 		deleteCategory(category) {
 			uni.showModal({
@@ -738,19 +744,19 @@ export default {
 				}
 			});
 		},
-		
+
 		// 执行删除分类
 		async performDeleteCategory(category) {
 			try {
 				// 调用后端API删除分类
 				await orderingManager.deleteCategory(category.id);
-				
+
 				// 删除成功后，从本地数据中移除
 				const categoryIndex = this.foodCategories.findIndex(cat => cat.id === category.id);
 				if (categoryIndex !== -1) {
 					this.foodCategories.splice(categoryIndex, 1);
 				}
-				
+
 				// 如果删除的是当前选中的分类，切换到第一个分类
 				if (this.activeCategory === category.id) {
 					// 选择第一个可用分类
@@ -760,7 +766,7 @@ export default {
 						this.activeCategory = null;
 					}
 				}
-				
+
 				uni.showToast({
 					title: '删除成功',
 					icon: 'success'
@@ -773,17 +779,17 @@ export default {
 				});
 			}
 		},
-		
+
 		// 保存更新后的分类列表到缓存（模拟持久化）
 		saveFoodCategories() {
 			try {
 				uni.setStorageSync('foodCategories', JSON.stringify(this.foodCategories));
 				console.log('分类数据已保存');
-			} catch(e) {
+			} catch (e) {
 				console.error('保存分类数据失败:', e);
 			}
 		},
-		
+
 		// 从后端加载分类和菜品数据
 		async loadBackendData() {
 			this.loading = true;
@@ -804,13 +810,13 @@ export default {
 				this.loading = false;
 			}
 		},
-		
+
 		// 从后端加载分类
 		async loadCategoriesFromBackend() {
 			try {
 				const categories = await orderingManager.getCategoriesSimple();
 				console.log('获取到的分类:', categories);
-				
+
 				// 转换数据格式以适配前端
 				this.foodCategories = categories.map(cat => ({
 					id: cat.id,
@@ -818,24 +824,24 @@ export default {
 					emoji: cat.icon || '🍽️',
 					items: [] // 初始为空，后续加载菜品
 				}));
-				
+
 				// 如果有分类，设置第一个分类为默认选中
 				if (this.foodCategories.length > 0 && !this.activeCategory) {
 					this.activeCategory = this.foodCategories[0].id;
 				}
-				
+
 			} catch (error) {
 				console.error('加载分类失败:', error);
 				throw error;
 			}
 		},
-		
+
 		// 从后端加载菜品
 		async loadMealsFromBackend() {
 			try {
 				const meals = await orderingManager.getMeals({ available_only: 'true' });
 				console.log('获取到的菜品:', meals);
-				
+
 				// 按分类组织菜品数据
 				meals.forEach(meal => {
 					// 转换数据格式
@@ -849,7 +855,7 @@ export default {
 						difficulty: this.mapDifficulty(meal.difficulty),
 						categoryId: meal.category
 					};
-					
+
 					// 找到对应的分类并添加菜品
 					const category = this.foodCategories.find(cat => cat.id === meal.category);
 					if (category) {
@@ -859,13 +865,13 @@ export default {
 						category.items.push(mealItem);
 					}
 				});
-				
+
 			} catch (error) {
 				console.error('加载菜品失败:', error);
 				throw error;
 			}
 		},
-		
+
 		// 映射难度值
 		mapDifficulty(difficulty) {
 			const difficultyMap = {
@@ -875,7 +881,7 @@ export default {
 			};
 			return difficultyMap[difficulty] || 1;
 		},
-		
+
 		// 临时设置管理员权限（用于测试）
 		toggleAdminMode() {
 			// 检查是否有权限切换
@@ -886,23 +892,23 @@ export default {
 				});
 				return;
 			}
-			
+
 			this.familyData.role = this.familyData.role === 'admin' ? 'member' : 'admin';
-			
+
 			// 保存管理员模式状态到本地存储
 			try {
 				uni.setStorageSync('adminModeEnabled', this.familyData.role === 'admin');
 				console.log('管理员模式状态已保存:', this.familyData.role === 'admin');
-			} catch(e) {
+			} catch (e) {
 				console.error('保存管理员模式状态失败:', e);
 			}
-			
+
 			uni.showToast({
 				title: this.familyData.role === 'admin' ? '已开启管理员模式' : '已关闭管理员模式',
 				icon: 'success'
 			});
 		},
-		
+
 		// 添加新分类
 		addNewCategory() {
 			// 跳转到分类添加页面
@@ -910,14 +916,14 @@ export default {
 				url: '/pages/category/edit?mode=add'
 			});
 		},
-		
+
 		// 处理菜品更新
 		handleFoodUpdate(eventData) {
 			console.log('接收到菜品更新:', eventData);
-			
+
 			const categoryIndex = this.foodCategories.findIndex(cat => cat.id === eventData.categoryId);
 			if (categoryIndex === -1) return;
-			
+
 			if (eventData.mode === 'add') {
 				// 添加新菜品
 				const newFood = {
@@ -925,14 +931,14 @@ export default {
 					id: this.nextFoodId++ // 设置新ID
 				};
 				this.foodCategories[categoryIndex].items.push(newFood);
-				
+
 			} else if (eventData.mode === 'edit') {
 				// 更新已有菜品
 				const itemIndex = this.foodCategories[categoryIndex].items.findIndex(item => item.id === eventData.data.id);
 				if (itemIndex !== -1) {
 					this.$set(this.foodCategories[categoryIndex].items, itemIndex, eventData.data);
 				}
-				
+
 			} else if (eventData.mode === 'delete') {
 				// 删除菜品
 				const itemIndex = this.foodCategories[categoryIndex].items.findIndex(item => item.id === eventData.foodId);
@@ -940,32 +946,36 @@ export default {
 					this.foodCategories[categoryIndex].items.splice(itemIndex, 1);
 				}
 			}
-			
+
 			// 保存更新后的数据到缓存
 			this.saveFoodCategories();
 		},
-		
+
 		// 恢复管理员模式状态
 		restoreAdminMode() {
 			try {
 				const adminModeEnabled = uni.getStorageSync('adminModeEnabled');
-				if (adminModeEnabled !== '') {
-					// 只有在用户有权限切换管理员模式时才应用存储的状态
-					if (this.canToggleAdminMode) {
-						const newRole = adminModeEnabled ? 'admin' : 'member';
-						if (this.familyData.role !== newRole) {
-							this.familyData.role = newRole;
-							console.log('从缓存恢复管理员模式状态:', adminModeEnabled);
-						}
-					}
+				console.log('读取到的管理员模式状态:', adminModeEnabled);
+
+				// 只有在有存储状态且用户有权限时才应用
+				if (adminModeEnabled !== '' && this.canToggleAdminMode) {
+					this.familyData.role = adminModeEnabled ? 'admin' : 'member';
+					console.log('恢复管理员模式状态为:', this.familyData.role);
+				} else if (!this.familyData.role) {
+					// 如果没有角色设置，设置默认值
+					this.familyData.role = 'member';
 				}
-			} catch(e) {
+			} catch (e) {
 				console.error('恢复管理员模式状态失败:', e);
+				// 出错时设置默认值
+				if (!this.familyData.role) {
+					this.familyData.role = 'member';
+				}
 			}
 		},
-		
+
 		// === 点餐车管理功能 ===
-		
+
 		// 显示点餐车
 		showCartModal() {
 			if (!this.hasCartItems) {
@@ -977,12 +987,12 @@ export default {
 			}
 			this.showCart = true;
 		},
-		
+
 		// 隐藏点餐车
 		hideCartModal() {
 			this.showCart = false;
 		},
-		
+
 		// 增加商品数量
 		increaseQuantity(item) {
 			const cartItem = this.cartItems.find(cartItem => cartItem.id === item.id);
@@ -991,7 +1001,7 @@ export default {
 				this.saveCartToStorage();
 			}
 		},
-		
+
 		// 减少商品数量
 		decreaseQuantity(item) {
 			const cartItemIndex = this.cartItems.findIndex(cartItem => cartItem.id === item.id);
@@ -1005,7 +1015,7 @@ export default {
 				this.saveCartToStorage();
 			}
 		},
-		
+
 		// 从点餐车移除商品
 		removeFromCart(item) {
 			const cartItemIndex = this.cartItems.findIndex(cartItem => cartItem.id === item.id);
@@ -1018,7 +1028,7 @@ export default {
 				});
 			}
 		},
-		
+
 		// 清空点餐车
 		clearCart() {
 			uni.showModal({
@@ -1037,9 +1047,9 @@ export default {
 				}
 			});
 		},
-		
+
 		// 提交订单
-		submitOrder() {
+		async submitOrder() {
 			if (!this.hasCartItems) {
 				uni.showToast({
 					title: '点餐车为空',
@@ -1048,7 +1058,7 @@ export default {
 				});
 				return;
 			}
-			
+
 			// 显示确认对话框
 			uni.showModal({
 				title: '确认提交',
@@ -1060,30 +1070,58 @@ export default {
 							title: '正在提交...',
 							mask: true
 						});
-						
+
 						try {
-							// 模拟提交订单的过程
-							// 这里可以调用后端API提交订单
-							await new Promise(resolve => setTimeout(resolve, 1500));
-							
-							// 提交成功
-							uni.hideLoading();
-							uni.showToast({
-								title: '订单提交成功！',
-								icon: 'success',
-								duration: 2000
-							});
-							
-							// 清空购物车
-							this.clearCart();
-							
-							// 关闭弹窗
-							this.hideCartModal();
-							
+							// 构造订单数据
+							console.log('当前userInfo:', JSON.stringify(this.userInfo, null, 2));
+							console.log('当前familyData:', JSON.stringify(this.familyData, null, 2));
+							const orderData = {
+								name: `${this.userInfo.nickName}的${this.getCurrentMealType()}订单`,
+								coordinator: this.userInfo.id,
+								status: 'pending',
+								family_id: this.familyData.familyId,
+								user_id: this.userInfo.id,
+								meal_requests: this.cartItems.map(item => ({
+									meal_item: item.id,
+									quantity: item.quantity,
+									special_requests: item.specialRequests || ''
+								})),
+								meal_type: this.getCurrentMealType()
+							};
+							console.log('提交订单数据:', JSON.stringify(orderData, null, 2));
+
+							// 调用API提交订单
+							const result = await orderingManager.createBatch(orderData);
+
+							if (result.success) {
+								// 提交成功
+								uni.hideLoading();
+								uni.showToast({
+									title: '订单提交成功！',
+									icon: 'success',
+									duration: 2000
+								});
+
+								// 清空购物车
+								this.clearCart();
+
+								// 关闭弹窗
+								this.hideCartModal();
+
+								// 触发订单更新事件
+								uni.$emit('order-updated');
+							} else {
+								uni.hideLoading();
+								uni.showToast({
+									title: result.message || '提交失败',
+									icon: 'none',
+									duration: 2000
+								});
+							}
 						} catch (error) {
 							uni.hideLoading();
 							uni.showToast({
-								title: '提交失败，请重试',
+								title: error.message || '网络错误',
 								icon: 'none',
 								duration: 2000
 							});
@@ -1093,7 +1131,15 @@ export default {
 				}
 			});
 		},
-		
+
+		// 获取当前餐点类型(早/中/晚餐)
+		getCurrentMealType() {
+			const hour = new Date().getHours();
+			if (hour >= 5 && hour < 11) return 'breakfast';
+			if (hour >= 11 && hour < 16) return 'lunch';
+			return 'dinner';
+		},
+
 		// 保存点餐车到本地存储
 		saveCartToStorage() {
 			try {
@@ -1102,7 +1148,7 @@ export default {
 				console.error('保存点餐车数据失败:', e);
 			}
 		},
-		
+
 		// 从本地存储加载点餐车
 		loadCartFromStorage() {
 			try {
@@ -1115,7 +1161,7 @@ export default {
 				this.cartItems = [];
 			}
 		},
-		
+
 		// 获取随机提示信息
 		getCurrentTip() {
 			if (!this.tips || this.tips.length === 0) return "欢迎使用家庭点餐系统";
@@ -1361,7 +1407,8 @@ export default {
 	border-radius: 20rpx 20rpx 0 0;
 	margin-top: 20rpx;
 	overflow: hidden;
-	height: 800rpx; /* 固定高度，确保滚动正常 */
+	height: 800rpx;
+	/* 固定高度，确保滚动正常 */
 }
 
 /* 左侧分类栏 */
@@ -1609,8 +1656,13 @@ export default {
 }
 
 @keyframes fadeIn {
-	from { opacity: 0; }
-	to { opacity: 1; }
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
 }
 
 .cart-modal {
@@ -1625,8 +1677,13 @@ export default {
 }
 
 @keyframes slideUp {
-	from { transform: translateY(100%); }
-	to { transform: translateY(0); }
+	from {
+		transform: translateY(100%);
+	}
+
+	to {
+		transform: translateY(0);
+	}
 }
 
 /* 美化的头部区域 */
@@ -1727,10 +1784,11 @@ export default {
 
 /* 商品列表区域 */
 .cart-content {
-  flex: 1;
-  padding: 20rpx 30rpx;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch; /* 优化移动端滚动体验 */
+	flex: 1;
+	padding: 20rpx 30rpx;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	/* 优化移动端滚动体验 */
 }
 
 .cart-empty {
@@ -2062,6 +2120,7 @@ export default {
 	from {
 		opacity: 0;
 	}
+
 	to {
 		opacity: 1;
 	}
@@ -2082,6 +2141,7 @@ export default {
 	from {
 		transform: translateY(100%);
 	}
+
 	to {
 		transform: translateY(0);
 	}
@@ -2223,10 +2283,13 @@ export default {
 }
 
 @keyframes sparkle {
-	0%, 100% {
+
+	0%,
+	100% {
 		opacity: 0.3;
 		transform: scale(0.8);
 	}
+
 	50% {
 		opacity: 1;
 		transform: scale(1.2);
@@ -2280,14 +2343,17 @@ export default {
 }
 
 .cart-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 15rpx; /* 减小间距 */
-    padding: 20rpx 15rpx; /* 调整内边距 */
-    border-bottom: 1rpx solid #F8F9FA;
-    position: relative;
-    width: 95%;
-    box-sizing: border-box; /* 确保padding不会增加宽度 */
+	display: flex;
+	align-items: flex-start;
+	gap: 15rpx;
+	/* 减小间距 */
+	padding: 20rpx 15rpx;
+	/* 调整内边距 */
+	border-bottom: 1rpx solid #F8F9FA;
+	position: relative;
+	width: 95%;
+	box-sizing: border-box;
+	/* 确保padding不会增加宽度 */
 }
 
 .cart-item:last-child {
@@ -2296,16 +2362,18 @@ export default {
 
 /* 修改图片容器的尺寸 */
 .item-image-wrapper {
-    position: relative;
-    flex-shrink: 0;
-    width: 100rpx; /* 减小宽度 */
+	position: relative;
+	flex-shrink: 0;
+	width: 100rpx;
+	/* 减小宽度 */
 }
 
 .item-image {
-    width: 100%;
-    height: 100rpx; /* 保持宽高比 */
-    border-radius: 12rpx;
-    object-fit: cover;
+	width: 100%;
+	height: 100rpx;
+	/* 保持宽高比 */
+	border-radius: 12rpx;
+	object-fit: cover;
 }
 
 .item-quantity-badge {
@@ -2599,12 +2667,19 @@ export default {
 }
 
 @keyframes bounce {
-	0%, 20%, 50%, 80%, 100% {
+
+	0%,
+	20%,
+	50%,
+	80%,
+	100% {
 		transform: translateY(0);
 	}
+
 	40% {
 		transform: translateY(-6rpx);
 	}
+
 	60% {
 		transform: translateY(-3rpx);
 	}

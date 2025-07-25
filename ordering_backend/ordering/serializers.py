@@ -4,6 +4,7 @@ from .models import (
     MealConfirmation, MealOrderBatch, FamilyMealStats
 )
 from wechat_auth.models import WeChatUser, Family
+from django.utils import timezone
 
 class MealCategorySerializer(serializers.ModelSerializer):
     """餐品分类序列化器"""
@@ -99,7 +100,7 @@ class MealOrderBatchSerializer(serializers.ModelSerializer):
         model = MealOrderBatch
         fields = [
             'id', 'name', 'target_time', 'status', 'notes',
-            'coordinator', 'coordinator_name', 'meal_requests',
+            'coordinator', 'coordinator_name',
             'meal_requests_details', 'total_requests', 'pending_requests',
             'created_at', 'updated_at'
         ]
@@ -112,6 +113,69 @@ class MealOrderBatchSerializer(serializers.ModelSerializer):
     def get_pending_requests(self, obj):
         """待处理点餐需求数量"""
         return obj.get_pending_requests().count()
+
+    def validate_target_time(self, value):
+        """验证 target_time 是否为有效时间字符串"""
+        # 如果已经是 datetime 对象，直接返回
+        if isinstance(value, timezone.datetime):
+            return value
+            
+        if not isinstance(value, str):
+            raise serializers.ValidationError('target_time 必须是字符串')
+        try:
+            # 支持多种 ISO 格式
+            if value.endswith('Z'):
+                # 处理 UTC 时间格式，如 "2025-07-04T05:20:00.191Z"
+                value = value.replace('Z', '+00:00')
+            
+            # 使用 Django 的 timezone 解析 ISO 格式
+            from django.utils.dateparse import parse_datetime
+            parsed_time = parse_datetime(value)
+            if parsed_time is None:
+                raise ValueError("无法解析时间格式")
+            return parsed_time
+        except ValueError:
+            raise serializers.ValidationError('target_time 格式无效，应为 ISO 时间字符串')
+
+    def validate_status(self, value):
+        """验证 status 字段"""
+        return value
+
+    def validate(self, attrs):
+        """整体验证方法 - 处理 meal_requests"""
+        # 打印调试信息
+        print(f"序列化器验证 - initial_data: {self.initial_data}")
+        print(f"序列化器验证 - attrs: {attrs}")
+        
+        # 从初始数据中获取 meal_requests（绕过字段验证）
+        meal_requests_data = self.initial_data.get('meal_requests', [])
+        
+        # 验证 meal_requests 数据格式
+        if not isinstance(meal_requests_data, list):
+            raise serializers.ValidationError({'meal_requests': ['必须是数组']})
+        
+        for i, request_data in enumerate(meal_requests_data):
+            if not isinstance(request_data, dict):
+                raise serializers.ValidationError({'meal_requests': [f'第{i+1}个元素必须是字典']})
+            if 'meal_item' not in request_data:
+                raise serializers.ValidationError({'meal_requests': [f'第{i+1}个元素缺少 meal_item 字段']})
+            if 'quantity' not in request_data:
+                raise serializers.ValidationError({'meal_requests': [f'第{i+1}个元素缺少 quantity 字段']})
+            if 'special_requests' not in request_data:
+                request_data['special_requests'] = ''
+        
+        # 将 meal_requests 数据存储到 attrs 中供后续使用
+        attrs['_meal_requests_data'] = meal_requests_data
+        
+        # 将 meal_requests 设为空列表，避免序列化器字段验证失败
+        attrs['meal_requests'] = []
+        
+        # 添加 meal_type 字段验证
+        if 'meal_type' not in attrs:
+            raise serializers.ValidationError({'meal_type': ['必须指定餐点类型']})
+        
+        print(f"序列化器验证完成 - 最终 attrs: {attrs}")
+        return attrs
 
 class FamilyMealStatsSerializer(serializers.ModelSerializer):
     """家庭用餐统计序列化器"""

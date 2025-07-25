@@ -16,6 +16,7 @@ router.register(r'stats', views.FamilyMealStatsViewSet, basename='familymealstat
 # URL模式
 urlpatterns = [
     path('', include(router.urls)),
+    path('upload-meal-image/', views.MealImageUploadView.as_view(), name='upload-meal-image'),
 ]
 
 # API路由说明：

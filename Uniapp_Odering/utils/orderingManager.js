@@ -2,7 +2,7 @@
  * 点餐功能API管理器
  */
 
-import { request, CONFIG } from './api.js'
+import { request, CONFIG, AuthAPI } from './api.js'
 
 class OrderingManager {
 	constructor() {
@@ -23,6 +23,13 @@ class OrderingManager {
 	 */
 	async getCategoriesSimple() {
 		return await request(`${this.baseUrl}/categories/simple_list/`, 'GET')
+	}
+	
+	/**
+	 * 获取单个分类详情
+	 */
+	async getCategory(categoryId) {
+		return await request(`${this.baseUrl}/categories/${categoryId}/`, 'GET')
 	}
 	
 	/**
@@ -383,9 +390,19 @@ class OrderingManager {
 	 * 上传图片文件
 	 */
 	async uploadImage(imagePath) {
-		// 这里需要根据实际的上传API实现
-		// 临时返回本地路径
-		return imagePath
+		try {
+			const uploadResult = await AuthAPI.uploadMealImage(imagePath)
+			console.log('上传图片结果:', uploadResult)
+			// 确保返回正确的图片URL
+			if (uploadResult && uploadResult.image_url) {
+				return uploadResult.image_url
+			} else {
+				throw new Error('上传成功但未返回图片URL')
+			}
+		} catch (error) {
+			console.error('上传菜品图片失败:', error)
+			throw error
+		}
 	}
 	
 	/**

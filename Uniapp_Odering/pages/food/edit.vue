@@ -264,46 +264,137 @@ export default {
 	
 	methods: {
 		// 加载要编辑的菜品数据
-		loadFoodData(id) {
-			// 这里应该从全局数据或API获取菜品信息
-			// 暂时使用模拟数据
-			const mockData = {
-				id: 101,
-				name: '红烧肉',
-				description: '肥瘦相间，软糯香甜，色泽红亮',
-				detailedDescription: '红烧肉是一道著名的大众菜肴...',
-				image: '/static/dishes/hongshaorou.jpg',
-				tags: ['经典', '下饭', '节日'],
-				cookTime: 45,
-				difficulty: 2,
-				nutrition: {
-					calories: '500',
-					protein: '25g',
-					fat: '35g',
-					carbs: '15g'
-				}
-			};
-			
-			// 如果是编辑模式，填充表单数据
-			if (id == mockData.id) {
-				this.formData = { ...mockData };
+		async loadFoodData(id) {
+			try {
+				uni.showLoading({
+					title: '加载中...'
+				});
+				
+				// 从后端获取菜品信息
+				const mealData = await orderingManager.getMealDetail(id);
+				
+				// 填充表单数据，从后端数据映射到前端格式
+				this.formData = {
+					id: mealData.id,
+					name: mealData.name || '',
+					description: mealData.description || '',
+					detailedDescription: mealData.detailed_description || '',
+					image: mealData.image || '',
+					tags: mealData.tags || [],
+					cookTime: mealData.prep_time || 30,
+					difficulty: this.mapDifficultyToNumber(mealData.difficulty),
+					nutrition: this.parseNutritionInfo(mealData.nutrition_info)
+				};
+				
+				// 保存原始名称用于重复性检查
+				this.originalName = this.formData.name;
+				
+				uni.hideLoading();
+			} catch (error) {
+				console.error('加载菜品数据失败:', error);
+				uni.hideLoading();
+				uni.showToast({
+					title: '加载失败',
+					icon: 'error'
+				});
 			}
 		},
 		
+		// 将后端difficulty字符串映射为前端数字
+		mapDifficultyToNumber(difficulty) {
+			const difficultyMap = {
+				'easy': 1,
+				'medium': 2,
+				'hard': 3
+			};
+			return difficultyMap[difficulty] || 2;
+		},
+		
+		// 解析营养信息JSON字符串
+		parseNutritionInfo(nutritionStr) {
+			try {
+				if (nutritionStr) {
+					return JSON.parse(nutritionStr);
+				}
+			} catch (error) {
+				console.error('解析营养信息失败:', error);
+			}
+			return {
+				calories: '',
+				protein: '',
+				fat: '',
+				carbs: ''
+			};
+		},
+		
 		// 加载已存在的菜品名称
-		loadExistingNames() {
-			// 这里应该从全局数据获取所有菜品名称
-			this.existingNames = ['红烧肉', '糖醋排骨', '可乐鸡翅', '清炒菠菜'];
+		async loadExistingNames() {
+			try {
+				// 从后端获取当前分类下的所有菜品名称
+				const response = await orderingManager.getMeals(this.categoryId);
+				const meals = response.results || response || [];
+				this.existingNames = meals.map(meal => meal.name);
+			} catch (error) {
+				console.error('加载菜品列表失败:', error);
+				this.existingNames = [];
+			}
 		},
 		
 		// 选择图片
-		selectImage() {
+		async selectImage() {
 			uni.chooseImage({
 				count: 1,
 				sizeType: ['compressed'],
 				sourceType: ['album', 'camera'],
-				success: (res) => {
-					this.formData.image = res.tempFilePaths[0];
+				success: async (res) => {
+					try {
+						console.log('选择的图片路径:', res.tempFilePaths[0]);
+						
+						uni.showLoading({
+							title: '上传中...'
+						});
+						
+						// 上传图片到服务器
+						const uploadResult = await orderingManager.uploadImage(res.tempFilePaths[0]);
+						console.log('图片上传成功，返回URL:', uploadResult);
+						
+						// 确保uploadResult是一个有效的URL字符串
+						if (uploadResult && typeof uploadResult === 'string') {
+							this.formData.image = uploadResult;
+							console.log('设置formData.image为:', this.formData.image);
+							
+							// 测试图片URL是否可访问
+							uni.getImageInfo({
+								src: uploadResult,
+								success: (info) => {
+									console.log('图片信息获取成功:', info);
+								},
+								fail: (err) => {
+									console.error('图片信息获取失败:', err);
+								}
+							});
+						} else {
+							console.error('上传返回值不是有效URL:', uploadResult);
+							throw new Error('上传返回值不是有效URL');
+						}
+						
+						uni.hideLoading();
+						uni.showToast({
+							title: '上传成功',
+							icon: 'success'
+						});
+					} catch (error) {
+						uni.hideLoading();
+						console.error('上传图片失败:', error);
+						uni.showToast({
+							title: '上传失败: ' + (error.message || '未知错误'),
+							icon: 'error',
+							duration: 3000
+						});
+					}
+				},
+				fail: (error) => {
+					console.error('选择图片失败:', error);
 				}
 			});
 		},
@@ -391,6 +482,14 @@ export default {
 				return false;
 			}
 			
+			if (!this.categoryId) {
+				uni.showToast({
+					title: '缺少分类信息',
+					icon: 'none'
+				});
+				return false;
+			}
+			
 			return true;
 		},
 		
@@ -413,17 +512,30 @@ export default {
 					difficulty: this.getDifficultyString(this.formData.difficulty),
 					tags: this.formData.tags,
 					is_available: true,
-					nutrition_info: JSON.stringify(this.formData.nutrition)
+					// 移除了 nutrition_info 字段，因为后端模型没有这个字段
+					// 如果需要，可以添加 ingredients 和 cooking_steps
+					ingredients: [],
+					cooking_steps: []
 				};
+				
+				// 添加调试日志
+				console.log('准备保存的菜品数据:', mealData);
+				console.log('是否编辑模式:', this.isEditMode);
+				console.log('编辑ID:', this.editingId);
+				console.log('分类ID:', this.categoryId);
 				
 				let savedMeal;
 				if (this.isEditMode) {
 					// 更新菜品
+					console.log('调用updateMeal，ID:', this.editingId);
 					savedMeal = await orderingManager.updateMeal(this.editingId, mealData);
 				} else {
 					// 创建菜品
+					console.log('调用createMeal');
 					savedMeal = await orderingManager.createMeal(mealData);
 				}
+				
+				console.log('保存成功，返回数据:', savedMeal);
 				
 				uni.hideLoading();
 				
