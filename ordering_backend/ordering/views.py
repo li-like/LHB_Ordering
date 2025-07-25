@@ -49,18 +49,60 @@ class MealCategoryViewSet(viewsets.ModelViewSet):
         """创建分类时设置创建者和家庭"""
         # 获取用户当前选择的家庭（这里需要前端传递family_id）
         family_id = self.request.data.get('family_id')
-        if not family_id:
-            # 如果没有指定家庭，使用用户第一个家庭
-            membership = FamilyMembership.objects.filter(
-                user=self.request.user, is_active=True
-            ).first()
-            if membership:
-                family_id = membership.family.id
         
-        serializer.save(
-            created_by=self.request.user,
-            family_id=family_id
-        )
+        # 处理匿名用户的情况
+        if self.request.user.is_anonymous:
+            # 临时处理：使用默认值
+            try:
+                # 使用第一个可用的family和用户
+                family = Family.objects.first()
+                created_by = WeChatUser.objects.first()
+                if not created_by:
+                    # 如果没有用户，创建一个测试用户
+                    created_by = WeChatUser.objects.create(
+                        openid='test_openid',
+                        nickname='测试用户',
+                        avatar_url='',
+                        is_test_user=True
+                    )
+                family_id = family_id or (family.id if family else 1)
+                    
+                serializer.save(
+                    created_by=created_by,
+                    family_id=family_id
+                )
+            except Exception as e:
+                print(f"创建分类失败: {e}")
+                raise
+        else:
+            # 正常用户处理
+            if not family_id:
+                # 如果没有指定家庭，使用用户第一个家庭
+                membership = FamilyMembership.objects.filter(
+                    user=self.request.user, is_active=True
+                ).first()
+                if membership:
+                    family_id = membership.family.id
+            
+            serializer.save(
+                created_by=self.request.user,
+                family_id=family_id
+            )
+
+    def perform_update(self, serializer):
+        """更新分类时处理匿名用户"""
+        # 对于更新操作，保持原有的创建者和家庭信息
+        # 只更新可编辑的字段
+        if self.request.user.is_anonymous:
+            # 匿名用户更新时，保持原有的创建者和家庭信息不变
+            serializer.save()
+        else:
+            # 正常用户可以更新家庭信息
+            family_id = self.request.data.get('family_id')
+            if family_id:
+                serializer.save(family_id=family_id)
+            else:
+                serializer.save()
 
     @action(detail=False, methods=['get'])
     def simple_list(self, request):

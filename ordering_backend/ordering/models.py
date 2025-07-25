@@ -10,7 +10,7 @@ class MealCategory(models.Model):
     family = models.ForeignKey(Family, on_delete=models.CASCADE, related_name='meal_categories', verbose_name='所属家庭')
     name = models.CharField(max_length=64, verbose_name='分类名称')
     description = models.TextField(blank=True, verbose_name='分类描述')
-    icon = models.URLField(blank=True, null=True, verbose_name='分类图标')
+    icon = models.CharField(max_length=255, blank=True, null=True, verbose_name='分类图标（支持emoji或图片URL）')
     sort_order = models.IntegerField(default=0, verbose_name='排序')
     is_active = models.BooleanField(default=True, verbose_name='是否启用')
     created_by = models.ForeignKey(WeChatUser, on_delete=models.CASCADE, verbose_name='创建者')

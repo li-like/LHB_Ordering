@@ -84,9 +84,14 @@
 					<view class="category-tab" :class="{ 'active': activeCategory === category.id }"
 						v-for="category in foodCategories" :key="category.id" @click="selectFoodCategory(category.id)"
 						@longpress="isAdmin ? manageCategoryOptions(category) : null">
-						<text class="category-icon">{{ category.emoji }}</text>
+						<!-- 图标区域 -->
+						<view class="category-icon-wrapper">
+							<!-- 判断是emoji还是图片URL -->
+							<text v-if="isEmoji(category.emoji)" class="category-icon">{{ category.emoji }}</text>
+							<image v-else :src="category.emoji" class="category-icon-image" mode="aspectFill"></image>
+						</view>
+						<!-- 分类名称 -->
 						<text class="category-name">{{ category.name }}</text>
-						<text class="item-count">({{ category.items.length }})</text>
 						<!-- 管理员：分类管理小图标 -->
 						<view v-if="isAdmin && activeCategory === category.id" class="category-manage"
 							@click.stop="manageCategoryOptions(category)">
@@ -433,6 +438,13 @@ export default {
 	},
 
 	methods: {
+		// 判断是否为emoji
+		isEmoji(str) {
+			if (!str) return false;
+			// 简单判断：如果包含http就认为是URL，否则认为是emoji
+			return !str.includes('http');
+		},
+		
 		// 检查登录状态
 		async checkLogin() {
 			if (!userManager.isLoggedIn()) {
@@ -1413,16 +1425,29 @@ export default {
 
 /* 左侧分类栏 */
 .category-sidebar {
-	width: 200rpx;
+	width: 180rpx;
 	background: #F8F9FA;
 	border-right: 1rpx solid #E9ECEF;
 }
 
 .category-tab {
-	padding: 30rpx 20rpx;
-	text-align: center;
+	padding: 15rpx 10rpx;
 	border-bottom: 1rpx solid #E9ECEF;
 	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	min-height: 120rpx;
+	transition: all 0.2s ease;
+}
+
+.category-tab.active {
+	background: #FFFFFF;
+	transform: scale(1.02);
+	border-radius: 12rpx;
+	margin: 2rpx;
+	box-shadow: 0 2rpx 8rpx rgba(255, 107, 149, 0.15);
 }
 
 .category-tab.active {
@@ -1433,35 +1458,90 @@ export default {
 .category-tab.active::before {
 	content: '';
 	position: absolute;
-	left: 0;
+	left: -2rpx;
 	top: 50%;
 	transform: translateY(-50%);
 	width: 6rpx;
-	height: 60rpx;
+	height: 40rpx;
 	background: #FF6B95;
 	border-radius: 0 6rpx 6rpx 0;
 }
 
+/* 图标包装器 */
+.category-icon-wrapper {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 90rpx;
+	margin-bottom: 8rpx;
+}
+
+/* 去掉之前的文字信息区域样式 */
+
 .category-icon {
 	display: block;
-	font-size: 32rpx;
-	margin-bottom: 8rpx;
+	font-size: 64rpx;
+	line-height: 1;
+}
+
+.category-icon-image {
+	display: block;
+	width: 80rpx;
+	height: 80rpx;
+	border-radius: 12rpx;
+	object-fit: cover;
+	box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
 }
 
 .category-name {
 	display: block;
-	font-size: 24rpx;
-	font-weight: 500;
-	margin-bottom: 4rpx;
-}
-
-.item-count {
 	font-size: 20rpx;
-	color: #999999;
+	font-weight: 400;
+	text-align: center;
+	line-height: 1.2;
+	color: #666;
+	max-width: 140rpx;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
-.category-tab.active .item-count {
+.category-tab.active .category-name {
 	color: #FF6B95;
+	font-weight: 500;
+}
+
+/* 为图片添加活动状态效果 */
+.category-tab.active .category-icon-image {
+	box-shadow: 0 6rpx 20rpx rgba(255, 107, 149, 0.4);
+	transform: scale(1.1);
+	transition: all 0.3s ease;
+}
+
+/* 为emoji图标添加活动状态效果 */
+.category-tab.active .category-icon {
+	transform: scale(1.15);
+	transition: all 0.3s ease;
+}
+
+/* 通用的图标过渡效果 */
+.category-icon,
+.category-icon-image {
+	transition: all 0.3s ease;
+}
+
+/* 增加整体tab的悬停效果 */
+.category-tab {
+	transition: all 0.2s ease;
+}
+
+.category-tab.active {
+	background: #FFFFFF;
+	transform: scale(1.02);
+	border-radius: 12rpx;
+	margin: 2rpx;
+	box-shadow: 0 2rpx 8rpx rgba(255, 107, 149, 0.15);
 }
 
 .category-manage {

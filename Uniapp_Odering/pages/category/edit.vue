@@ -34,7 +34,12 @@
 						<view v-if="formData.iconType === 'emoji'" class="current-emoji">
 							{{ formData.emoji }}
 						</view>
-						<image v-else-if="formData.iconType === 'image'" class="current-image" :src="formData.image" mode="aspectFill"></image>
+						<image v-else-if="formData.iconType === 'image' && formData.image && formData.image.length > 0" 
+							   class="current-image" 
+							   :src="formData.image" 
+							   mode="aspectFill"
+							   @error="onImageError"
+							   @load="onImageLoad"></image>
 						<view v-else class="no-icon">
 							<text class="no-icon-text">未选择</text>
 						</view>
@@ -57,9 +62,29 @@
 				<view class="form-label">
 					<text class="label-text">预览效果</text>
 				</view>
+				
+				<!-- 临时调试信息 -->
+				<view class="debug-info" style="background: #f0f0f0; padding: 20rpx; margin-bottom: 20rpx; border-radius: 10rpx;">
+					<text style="font-size: 24rpx; color: #666;">调试信息:</text>
+					<text style="display: block; font-size: 22rpx; color: #333;">iconType: {{ formData.iconType }}</text>
+					<text style="display: block; font-size: 22rpx; color: #333;">emoji: {{ formData.emoji }}</text>
+					<text style="display: block; font-size: 22rpx; color: #333; word-break: break-all;">image: {{ formData.image }}</text>
+				</view>
+				
 				<view class="category-preview">
 					<view class="preview-tab">
-						<text class="preview-icon">{{ formData.emoji || '🍽️' }}</text>
+						<view v-if="formData.iconType === 'emoji'" class="preview-icon">
+							<text>{{ formData.emoji || '🍽️' }}</text>
+						</view>
+						<image v-else-if="formData.iconType === 'image' && formData.image && formData.image.length > 0" 
+							   class="preview-image" 
+							   :src="formData.image" 
+							   mode="aspectFill"
+							   @error="onPreviewImageError"
+							   @load="onPreviewImageLoad"></image>
+						<view v-else class="preview-icon">
+							<text>🍽️</text>
+						</view>
 						<text class="preview-name">{{ formData.name || '分类名称' }}</text>
 						<text class="preview-count">(0)</text>
 					</view>
@@ -125,6 +150,7 @@
 
 <script>
 import orderingManager from '../../utils/orderingManager.js'
+import { CONFIG } from '../../utils/api.js'
 
 // 确保引入了uni-popup组件
 // 如果项目中没有安装uni-popup组件，需要从插件市场安装
@@ -184,12 +210,15 @@ export default {
 				
 				const category = await orderingManager.getCategory(categoryId);
 				
+				// 判断icon字段是emoji还是图片URL
+				const isImageUrl = category.icon && (category.icon.startsWith('http') || category.icon.startsWith('/'));
+				
 				this.originalCategory = {
 					id: category.id,
 					name: category.name || '',
-					emoji: category.icon || '🍽️',
-					iconType: 'emoji',
-					image: category.image || ''
+					emoji: isImageUrl ? '🍽️' : (category.icon || '🍽️'),
+					iconType: isImageUrl ? 'image' : 'emoji',
+					image: isImageUrl ? category.icon : ''
 				};
 				
 				this.formData = { ...this.originalCategory };
@@ -283,16 +312,52 @@ export default {
 		},
 		
 		// 选择图片
-		selectImage() {
+		async selectImage() {
 			uni.chooseImage({
 				count: 1,
 				sizeType: ['compressed'],
 				sourceType: ['album', 'camera'],
-				success: (res) => {
+				success: async (res) => {
 					const tempFilePath = res.tempFilePaths[0];
-					this.formData.image = tempFilePath;
-					this.formData.iconType = 'image';
-					this.formData.emoji = '';
+					
+					// 显示上传进度
+					uni.showLoading({
+						title: '上传中...'
+					});
+					
+					try {
+						// 调用图片上传API
+						console.log('开始上传图片:', tempFilePath);
+						const uploadResult = await this.uploadImage(tempFilePath);
+						console.log('图片上传结果:', uploadResult);
+						
+						if (uploadResult.success) {
+							// 上传成功，设置图片URL
+							// 使用Vue.set确保响应式更新
+							this.$set(this.formData, 'image', uploadResult.image_url);
+							this.$set(this.formData, 'iconType', 'image');
+							this.$set(this.formData, 'emoji', '');
+							
+							console.log('图片设置成功:', this.formData);
+							console.log('iconType:', this.formData.iconType);
+							console.log('image URL:', this.formData.image);
+							
+							uni.hideLoading();
+							uni.showToast({
+								title: '上传成功',
+								icon: 'success'
+							});
+						} else {
+							throw new Error(uploadResult.error || '上传失败');
+						}
+					} catch (error) {
+						uni.hideLoading();
+						console.error('上传图片失败:', error);
+						uni.showToast({
+							title: error.message || '上传失败',
+							icon: 'none'
+						});
+					}
 				},
 				fail: (err) => {
 					console.error('选择图片失败:', err);
@@ -301,6 +366,31 @@ export default {
 						icon: 'none'
 					});
 				}
+			});
+		},
+		
+		// 上传图片到服务器
+		async uploadImage(filePath) {
+			return new Promise((resolve, reject) => {
+				uni.uploadFile({
+					url: `${CONFIG.baseUrl}/api/ordering/upload-meal-image/`,
+					filePath: filePath,
+					name: 'image',
+					header: {
+						'Content-Type': 'multipart/form-data'
+					},
+					success: (uploadRes) => {
+						try {
+							const result = JSON.parse(uploadRes.data);
+							resolve(result);
+						} catch (e) {
+							reject(new Error('解析响应失败'));
+						}
+					},
+					fail: (error) => {
+						reject(error);
+					}
+				});
 			});
 		},
 		
@@ -318,7 +408,7 @@ export default {
 				// 准备要保存的数据
 				const categoryData = {
 					name: this.formData.name,
-					icon: this.formData.emoji || '',
+					icon: this.formData.iconType === 'emoji' ? this.formData.emoji : this.formData.image,
 					description: this.formData.description || '',
 					family_id: 1 // 临时硬编码，后续需要从用户信息获取
 				};
@@ -434,6 +524,32 @@ export default {
 					icon: 'error'
 				});
 			}
+		},
+		
+		// 图片加载成功回调
+		onImageLoad(e) {
+			console.log('图片加载成功:', e);
+		},
+		
+		// 图片加载失败回调
+		onImageError(e) {
+			console.error('图片加载失败:', e);
+			console.log('图片URL:', this.formData.image);
+			uni.showToast({
+				title: '图片加载失败',
+				icon: 'none'
+			});
+		},
+		
+		// 预览图片加载成功回调
+		onPreviewImageLoad(e) {
+			console.log('预览图片加载成功:', e);
+		},
+		
+		// 预览图片加载失败回调
+		onPreviewImageError(e) {
+			console.error('预览图片加载失败:', e);
+			console.log('预览图片URL:', this.formData.image);
 		}
 	}
 }
@@ -727,6 +843,14 @@ export default {
 	font-size: 36rpx;
 	margin-bottom: 12rpx;
 	text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
+}
+
+.preview-image {
+	width: 60rpx;
+	height: 60rpx;
+	border-radius: 12rpx;
+	margin-bottom: 12rpx;
+	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
 }
 
 .preview-name {
