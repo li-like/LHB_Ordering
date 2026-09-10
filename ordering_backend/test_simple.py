@@ -1,7 +1,7 @@
 import requests
 
 def test_api():
-    base_url = 'http://192.168.10.4:8000'
+    base_url = 'http://192.168.189.240:8000'
     test_user = 'ocYjt6oIJsFk2RgC7duPZVScsBV8'  # 冷汉堡
     
     print("1. 测试菜谱大全模式(未登录):")

@@ -37,7 +37,7 @@ def test_current_api():
     
     # 2. 测试API调用
     print("\n🌐 测试API调用:")
-    base_url = "http://192.168.10.4:8000"
+    base_url = "http://192.168.189.240:8000"
     
     # 测试所有菜谱
     print("\n1. 测试获取所有菜谱 (无参数):")

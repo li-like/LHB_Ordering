@@ -20,7 +20,7 @@ def test_new_api_logic():
     print("🧪 测试新的API逻辑")
     print("============================================================")
     
-    base_url = "http://192.168.10.4:8000"
+    base_url = "http://192.168.189.240:8000"
     test_user_openid = "ocYjt6oIJsFk2RgC7duPZVScsBV8"  # 冷汉堡
     
     print("1. 测试菜谱大全模式 (无用户登录):")

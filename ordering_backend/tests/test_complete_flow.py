@@ -21,7 +21,7 @@ def test_complete_flow():
     print("🔍 完整的前后端菜谱展示测试")
     print("============================================================")
     
-    base_url = "http://192.168.10.4:8000"
+    base_url = "http://192.168.189.240:8000"
     test_user = "ocYjt6oIJsFk2RgC7duPZVScsBV8"  # 冷汉堡
     
     # 1. 数据库状态检查

@@ -20,7 +20,7 @@ function buildQueryString(params = {}) {
 
 // 开发环境配置
 const DEV_CONFIG = {
-  baseUrl: 'http://192.168.10.4:8000',  // 请将 <your_local_ip> 替换为你的局域网 IP 地址
+  baseUrl: 'http://192.168.189.240:8000',  // 当前局域网IP地址
   timeout: 10000,
   debug: true
 }
@@ -55,6 +55,11 @@ const API = {
     dishes: `${CONFIG.baseUrl}/api/restaurant/dishes/`,          // 菜品列表
     cart: `${CONFIG.baseUrl}/api/restaurant/cart/`,              // 购物车
     orders: `${CONFIG.baseUrl}/api/restaurant/orders/`,          // 订单
+  },
+  
+  // 点餐相关
+  ordering: {
+    uploadMealImage: `${CONFIG.baseUrl}/api/ordering/upload-meal-image/`,  // 菜品图片上传
   },
   
   // 家庭相关
@@ -291,6 +296,48 @@ const AuthAPI = {
         fail: (err) => {
           if (CONFIG.debug) {
             console.error(`[API Error] UPLOAD ${API.auth.uploadAvatar}`, err)
+          }
+          reject(new Error(err.errMsg || '上传失败'))
+        }
+      })
+    })
+  },
+
+  async uploadMealImage(filePath) {
+    return new Promise((resolve, reject) => {
+      uni.uploadFile({
+        url: API.ordering.uploadMealImage,
+        filePath: filePath,
+        name: 'image',
+        success: (res) => {
+          if (CONFIG.debug) {
+            console.log(`[API] UPLOAD ${API.ordering.uploadMealImage}`, {
+              filePath: filePath,
+              response: res.data
+            })
+          }
+          
+          try {
+            const data = JSON.parse(res.data)
+            console.log('图片上传响应数据:', data)
+            
+            if (data.success) {
+              // 确保返回完整的数据对象，包含image_url字段
+              if (!data.image_url) {
+                console.warn('服务器返回成功但缺少image_url字段', data)
+              }
+              resolve(data)
+            } else {
+              reject(new Error(data.error || '上传失败'))
+            }
+          } catch (error) {
+            console.error('解析上传响应失败:', error, res.data)
+            reject(new Error('解析响应失败'))
+          }
+        },
+        fail: (err) => {
+          if (CONFIG.debug) {
+            console.error(`[API Error] UPLOAD ${API.ordering.uploadMealImage}`, err)
           }
           reject(new Error(err.errMsg || '上传失败'))
         }

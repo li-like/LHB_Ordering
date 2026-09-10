@@ -44,6 +44,24 @@
 		<view class="menu-section">
 			<view class="menu-group">
 				<view class="group-title">
+					<text class="title-text">家庭管理</text>
+				</view>
+				<view class="menu-list">
+					<view class="menu-item" @click="goToFamily">
+						<view class="menu-icon">
+							<text class="icon-text">👨‍👩‍👧‍👦</text>
+						</view>
+						<view class="menu-info">
+							<text class="menu-name">我的家庭</text>
+							<text class="menu-desc">管理家庭成员和设置</text>
+						</view>
+						<text class="menu-arrow">></text>
+					</view>
+				</view>
+			</view>
+
+			<view class="menu-group">
+				<view class="group-title">
 					<text class="title-text">个人设置</text>
 				</view>
 				<view class="menu-list">
@@ -181,8 +199,15 @@ export default {
 	},
 	
 	methods: {
-		// 检查登录状态
-		async checkLogin() {
+			// 跳转到家庭管理页面
+			goToFamily() {
+				uni.navigateTo({
+					url: '/pages/family/family'
+				});
+			},
+			
+			// 检查登录状态
+			async checkLogin() {
 			if (!await userManager.isLoggedIn()) {
 				uni.redirectTo({
 					url: '/pages/login/login'

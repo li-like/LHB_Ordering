@@ -9,7 +9,7 @@ import requests
 import json
 
 # 配置
-BASE_URL = "http://192.168.10.4:8000"
+BASE_URL = "http://192.168.189.240:8000"
 TEST_OPENID = "ocYjt6oIJsFk2RgC7duPZVScsBV8"
 
 def test_recipe_api():

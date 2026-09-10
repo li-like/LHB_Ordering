@@ -87,6 +87,7 @@ class UserInfoView(APIView):
         try:
             user = WeChatUser.objects.get(openid=openid)
             return Response({
+                'id': user.id,  # 添加用户主键ID
                 'openid': user.openid,
                 'nickname': user.nickname,
                 'avatar': user.avatar
@@ -279,7 +280,7 @@ class AvatarUploadView(APIView):
             file_path = default_storage.save(unique_filename, ContentFile(avatar_file.read()))
             
             # 构建完整的URL
-            base_url = "http://192.168.10.4:8000"  # 开发环境URL
+            base_url = "http://192.168.189.240:8000"  # 开发环境URL
             avatar_url = f"{base_url}/media/{file_path}"
             
             # 打印调试信息
