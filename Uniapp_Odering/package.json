@@ -1,21 +1,27 @@
 {
-  "name": "family-ordering",
-  "version": "1.0.0",
-  "description": "温馨家庭，美味共享 - 专为家庭设计的点餐小程序",
+  "name": "couple-ordering-v2",
+  "version": "2.0.0",
+  "description": "两个人的个性化点餐与餐桌记忆",
   "main": "main.js",
   "scripts": {
-    "dev:mp-weixin": "uni build -p mp-weixin",
-    "build:mp-weixin": "uni build -p mp-weixin"
+    "dev:h5": "node ./scripts/uni-cli.mjs -p h5",
+    "dev:mp-weixin": "node ./scripts/uni-cli.mjs -p mp-weixin",
+    "build:h5": "node ./scripts/uni-cli.mjs build -p h5",
+    "build:mp-weixin": "node ./scripts/uni-cli.mjs build -p mp-weixin"
   },
   "uni-app": {
     "scripts": {}
   },
-  "dependencies": {},
+  "dependencies": {
+    "@dcloudio/uni-app": "^3.0.0-alpha-4010420240422001",
+    "@dcloudio/uni-h5": "^3.0.0-alpha-4010420240422001",
+    "vue": "^3.4.21"
+  },
   "devDependencies": {
     "@dcloudio/uni-app-plus": "^3.0.0-alpha-4010420240422001",
     "@dcloudio/uni-mp-weixin": "^3.0.0-alpha-4010420240422001",
     "@dcloudio/vite-plugin-uni": "^3.0.0-alpha-4010420240422001",
-    "vue": "^3.4.21",
+    "sass": "^1.104.0",
     "vite": "^5.2.8"
   },
   "browserslist": [
@@ -25,7 +31,7 @@
   "keywords": [
     "uniapp",
     "微信小程序",
-    "家庭点餐",
+    "情侣点餐",
     "vue3"
   ],
   "author": "",

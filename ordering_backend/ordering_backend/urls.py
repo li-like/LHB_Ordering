@@ -21,12 +21,7 @@ from django.conf.urls.static import static  # 导入静态文件处理模块
 
 urlpatterns = [  # 定义项目的 URL 路由列表
     path('admin/', admin.site.urls),  # 将 /admin/ 路径映射到管理后台
-    # 包含 wechat_auth 应用的 URL 配置，访问前缀为 /api/wechat/
-    path('api/wechat/', include('wechat_auth.urls')),
-    # 包含 recipes 应用的 URL 配置，访问前缀为 /api/
-    path('api/', include('recipes.urls')),
-    # 包含 ordering 应用的 URL 配置，访问前缀为 /api/ordering/
-    path('api/ordering/', include('ordering.urls')),
+    path('api/v2/', include('v2.urls')),
 ]
 
 # 在开发环境中处理媒体文件

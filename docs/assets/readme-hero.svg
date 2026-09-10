@@ -1,0 +1,45 @@
+<svg width="1200" height="460" viewBox="0 0 1200 460" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="80" y1="20" x2="1120" y2="440" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#252B28"/>
+      <stop offset="0.52" stop-color="#344039"/>
+      <stop offset="1" stop-color="#594039"/>
+    </linearGradient>
+    <linearGradient id="card" x1="760" y1="95" x2="1080" y2="380" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF9F0"/>
+      <stop offset="1" stop-color="#E9E7D9"/>
+    </linearGradient>
+    <filter id="shadow" x="690" y="40" width="450" height="390" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#111713" flood-opacity="0.35"/>
+    </filter>
+    <filter id="glow" x="-100" y="-100" width="1400" height="700" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="55"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="460" rx="32" fill="url(#bg)"/>
+  <circle cx="1050" cy="35" r="210" fill="#E98D74" fill-opacity="0.14" filter="url(#glow)"/>
+  <circle cx="210" cy="480" r="240" fill="#88A47C" fill-opacity="0.16" filter="url(#glow)"/>
+  <path d="M97 82C118 49 165 55 174 92C186 54 232 52 252 81C280 124 229 166 174 202C119 165 69 126 97 82Z" stroke="#E98D74" stroke-width="7" opacity="0.95"/>
+  <path d="M125 82C147 58 176 65 185 91C194 66 226 59 245 82" stroke="#A9BEA0" stroke-width="7" stroke-linecap="round"/>
+  <text x="83" y="257" fill="#F8F3EB" font-family="Inter, PingFang SC, Microsoft YaHei, sans-serif" font-size="17" font-weight="700" letter-spacing="5">TWO AT THE TABLE</text>
+  <text x="82" y="320" fill="#FFFFFF" font-family="Georgia, Songti SC, serif" font-size="50" font-weight="700">我们的餐桌</text>
+  <text x="83" y="365" fill="#D7DED7" font-family="Inter, PingFang SC, Microsoft YaHei, sans-serif" font-size="21">把“吃什么”，变成两个人的小期待。</text>
+  <g filter="url(#shadow)">
+    <rect x="738" y="66" width="378" height="330" rx="28" fill="url(#card)"/>
+    <text x="776" y="111" fill="#9B5D47" font-family="Inter, sans-serif" font-size="11" font-weight="800" letter-spacing="3">TONIGHT'S TABLE</text>
+    <text x="776" y="151" fill="#332D29" font-family="Georgia, Songti SC, serif" font-size="27" font-weight="700">今晚一起吃</text>
+    <rect x="776" y="178" width="302" height="55" rx="16" fill="#FFFFFF"/>
+    <circle cx="808" cy="205" r="15" fill="#F3D9CF"/>
+    <path d="M801 205H815" stroke="#C96F59" stroke-width="2" stroke-linecap="round"/>
+    <text x="836" y="211" fill="#403832" font-family="PingFang SC, sans-serif" font-size="16" font-weight="600">番茄鸡蛋面</text>
+    <rect x="776" y="246" width="144" height="104" rx="18" fill="#E2E9DD"/>
+    <circle cx="848" cy="286" r="25" fill="#F9F7ED" stroke="#8DA586" stroke-width="3"/>
+    <text x="813" y="332" fill="#4B5E4B" font-family="PingFang SC, sans-serif" font-size="13" font-weight="700">暖心主食</text>
+    <rect x="934" y="246" width="144" height="104" rx="18" fill="#F0DDD4"/>
+    <path d="M990 279C998 266 1018 269 1021 284C1026 270 1045 269 1052 282C1062 300 1042 315 1021 328C1000 315 981 300 990 279Z" fill="#D87F68"/>
+    <text x="970" y="332" fill="#765046" font-family="PingFang SC, sans-serif" font-size="13" font-weight="700">一起选菜</text>
+  </g>
+  <circle cx="1085" cy="75" r="7" fill="#E8B65A"/>
+  <circle cx="1120" cy="114" r="4" fill="#88A47C"/>
+  <circle cx="710" cy="374" r="5" fill="#E98D74"/>
+</svg>
